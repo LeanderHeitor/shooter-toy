@@ -64,8 +64,7 @@ public class PlayerScript : MonoBehaviour
             firePoint.localPosition = new Vector3(x, firePoint.localPosition.y, 0f);
         }
 
-        // ----- AVISAR O ANIMATOR -----
-        // speed > 0 => tocar Run;  isGrounded false => tocar Jump.
+        //isGrounded false => tocar Jump.
         if (animator != null)
         {
             animator.SetFloat("speed", Mathf.Abs(horizontal));
