@@ -30,6 +30,11 @@ public class GameManager : MonoBehaviour
     public static int abates = 0;
     public static int recorde = 0;
 
+    // ----- MOEDAS -----
+    // O unico recurso do jogo. NAO atravessa a morte: toda partida comeca pobre,
+    // e e isso que torna cada gasto uma escolha em vez de um detalhe.
+    public static int moedas = 0;
+
     // ----- SEQUENCIA DE ABATES -----
     // Conta abates encadeados. Se passar "janelaDaSequencia" sem matar ninguem, zera.
     // E o unico mecanismo do jogo que pune ficar recuando: parado, a sequencia morre.
@@ -42,6 +47,7 @@ public class GameManager : MonoBehaviour
     {
         // Cada partida comeca do zero. O recorde continua de onde estava.
         abates = 0;
+        moedas = 0;
         sequencia = 0;
         fimDaSequencia = 0f;
         janela = janelaDaSequencia;
@@ -115,6 +121,25 @@ public class GameManager : MonoBehaviour
         Keyboard kb = Keyboard.current;
         if (kb == null) return false;
         return kb.escapeKey.wasPressedThisFrame || kb.pKey.wasPressedThisFrame;
+    }
+
+    // Chamado pela Moeda quando o jogador encosta nela, e pelo fim de horda.
+    public static void GanharMoedas(int quanto)
+    {
+        if (quanto <= 0) return;
+        moedas = moedas + quanto;
+    }
+
+    // Devolve false e nao cobra nada se o jogador nao tiver o suficiente. Quem
+    // gasta pergunta ANTES de aplicar o efeito, senao dava para usar a granada
+    // fiado. Um unico lugar cobrando evita saldo negativo espalhado pelo codigo.
+    public static bool Gastar(int quanto)
+    {
+        if (quanto <= 0) return true;
+        if (moedas < quanto) return false;
+
+        moedas = moedas - quanto;
+        return true;
     }
 
     public static void ContarAbate()

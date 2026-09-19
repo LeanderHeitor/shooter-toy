@@ -161,8 +161,8 @@ BoxCollider2D:
   m_Offset: {x: 0, y: 0.6}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    pivot: {x: 0.5, y: 0}
+    oldSize: {x: 1.625, y: 1.59375}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -207,6 +207,9 @@ MonoBehaviour:
   animator: {fileID: -4539365116028890704}
   meuColisor: {fileID: 2257091696220631635}
   tempoAteSumir: 1.2
+  tempoDoFlash: 0.06
+  chanceDeSoltar: 0.75
+  moedasQueSolta: 1
   isMorto: 0
 --- !u!114 &-1571948650662582359
 MonoBehaviour:
@@ -220,5 +223,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1ca129e1b4c8e617bab91627086f333, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyKnife
-  morte: {fileID: -4867058161998916033}
   moveSpeed: 3.2
+  morte: {fileID: -4867058161998916033}

@@ -25,6 +25,10 @@ public class HUD : MonoBehaviour
     // O nome que aparece na tela de entrada. Trocar aqui nao mexe em mais nada.
     public string titulo = "SHOOTER TOY";
 
+    // O mesmo ouro do sprite da moeda, para o numero no canto e o objeto no chao
+    // serem lidos como a mesma coisa sem ninguem precisar explicar.
+    private static readonly Color corDaMoeda = new Color(1f, 0.82f, 0.29f);
+
     private GUIStyle placar;
     private GUIStyle grande;
     private GUIStyle dica;
@@ -148,11 +152,18 @@ public class HUD : MonoBehaviour
         Escrever(new Rect(margem, margem + linha, largura, linha),
                  "Recorde: " + GameManager.recorde, placar, Color.white);
 
+        // As moedas ficam SEMPRE na tela, mesmo zeradas: o jogador precisa saber o
+        // saldo a todo instante para decidir se gasta a granada agora ou guarda para
+        // a loja. Um numero que some quando chega a zero esconde justamente o momento
+        // em que a decisao fica mais dura.
+        Escrever(new Rect(margem, margem + (linha * 2f), largura, linha),
+                 "Moedas: " + GameManager.moedas, placar, corDaMoeda);
+
         // A sequencia so aparece quando esta valendo alguma coisa. Ela sumir da tela
         // ja e o aviso de que voce acabou de perde-la.
         if (GameManager.sequencia >= 2)
         {
-            Escrever(new Rect(margem, margem + (linha * 2f), largura, linha),
+            Escrever(new Rect(margem, margem + (linha * 3f), largura, linha),
                      "Sequência: " + GameManager.sequencia, placar, new Color(1f, 0.85f, 0.2f));
         }
     }

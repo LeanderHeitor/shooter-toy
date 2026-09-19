@@ -15,12 +15,24 @@ public class EnemyDeath : MonoBehaviour
     // Ele tem que ser curto pra nao esconder a animacao de morte, que comeca no mesmo quadro.
     public float tempoDoFlash = 0.06f;
 
+    // ----- MOEDA -----
+    // Nem todo abate paga: matar nao e o mesmo que ser pago. Os 75% existem para que
+    // o jogador nao consiga contar com o dinheiro do proximo tiro antes de atirar.
+    // E campo ajustavel de proposito: se em playtest a economia ficar sovina, este e
+    // o primeiro numero a subir.
+    public float chanceDeSoltar = 0.75f;
+
+    // Quantas moedas caem quando cai. O rebelde do fuzil solta mais que o da faca
+    // por ser o mais perigoso dos dois - quem arrisca mais, recebe mais.
+    public int moedasQueSolta = 1;
+
     // Os scripts de comportamento (EnemyKnife / EnemyRifle) olham isto pra parar de andar.
     public bool isMorto = false;
 
     private SpriteRenderer spriteRenderer;
     private Material materialNormal;
     private static Material materialDeFlash;   // vem de Assets/Resources, um pra todos
+    private static GameObject moedaPrefab;     // idem: evita arrastar nos dois prefabs
 
     void Start()
     {
@@ -54,8 +66,34 @@ public class EnemyDeath : MonoBehaviour
 
         Piscar();
         GameManager.ContarAbate();
+        SoltarMoedas();
 
         Destroy(gameObject, tempoAteSumir);
+    }
+
+    // As moedas nascem onde o inimigo caiu, nao no jogador: e a ida ate elas que
+    // custa alguma coisa, e e essa ida que o cerco transforma em risco.
+    void SoltarMoedas()
+    {
+        if (moedaPrefab == null) moedaPrefab = Resources.Load<GameObject>("Moeda");
+        if (moedaPrefab == null) return;
+
+        if (Random.value > chanceDeSoltar) return;
+
+        // Bonus de sequencia: a cada 5 abates encadeados, uma moeda a mais por abate.
+        // E o que paga o jogador por continuar avancando - a sequencia morre sozinha
+        // se ele parar ou recuar, entao o bonus premia exatamente o comportamento
+        // que o jogo quer.
+        int quantas = moedasQueSolta + (GameManager.sequencia / 5);
+
+        // O transform do inimigo fica nos PES dele e o desenho da moeda e centrado,
+        // entao sem esta subida ela nasceria metade enterrada no chao.
+        Vector3 onde = transform.position + new Vector3(0f, 0.25f, 0f);
+
+        for (int i = 0; i < quantas; i++)
+        {
+            Instantiate(moedaPrefab, onde, Quaternion.identity);
+        }
     }
 
     // Troca o material por um que pinta a silhueta inteira de branco.

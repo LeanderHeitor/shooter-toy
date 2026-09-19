@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &-7879823574509574382
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: -4875803598560214429}
+  m_Layer: 0
+  m_Name: firePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &-4875803598560214429
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -7879823574509574382}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.7, y: 0.75, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6154014727350478061}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &-6352198246980961106
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,8 +193,8 @@ BoxCollider2D:
   m_Offset: {x: 0, y: 0.6}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    pivot: {x: 0.5, y: 0}
+    oldSize: {x: 1.625, y: 1.59375}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -208,6 +239,9 @@ MonoBehaviour:
   animator: {fileID: 6505612181520366026}
   meuColisor: {fileID: -3295200146037586634}
   tempoAteSumir: 1.2
+  tempoDoFlash: 0.06
+  chanceDeSoltar: 0.75
+  moedasQueSolta: 2
   isMorto: 0
 --- !u!114 &-8322290766834220208
 MonoBehaviour:
@@ -221,40 +255,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45f1af4c896928495d780a7a9fe499bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyRifle
-  morte: {fileID: 9046666418325455488}
   moveSpeed: 2
   distanciaDeTiro: 6
   tirosPorSegundo: 0.5
   enemyBulletPrefab: {fileID: -8461330562119845095, guid: 683d37e292f77454efbe68d36b8e5080, type: 3}
   firePoint: {fileID: -4875803598560214429}
---- !u!1 &-7879823574509574382
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: -4875803598560214429}
-  m_Layer: 0
-  m_Name: firePoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &-4875803598560214429
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: -7879823574509574382}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.7, y: 0.75, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6154014727350478061}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  morte: {fileID: 9046666418325455488}
