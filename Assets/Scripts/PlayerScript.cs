@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem; // sistema de input NOVO da Unity (padrao deste projeto)
 
@@ -69,6 +70,11 @@ public class PlayerScript : MonoBehaviour
     {
         // Enquanto esta morto nao aceita mais comando nenhum: so espera o reinicio da cena.
         if (isMorto == true) return;
+
+        // O Update roda mesmo com o tempo parado - timeScale zero congela a FISICA,
+        // nao os scripts. Sem esta linha dava pra atirar de dentro do menu e da pausa,
+        // e a tecla que comeca a partida tambem disparava um tiro.
+        if (GameManager.estado != Estado.Jogando) return;
 
         Piscar();
 
@@ -168,12 +174,17 @@ public class PlayerScript : MonoBehaviour
 
         // Espera a animacao de morte terminar e so entao mostra a tela de fim de jogo.
         // Quem recarrega a cena e o GameManager, quando o jogador apertar uma tecla.
-        Invoke(nameof(MostrarFimDeJogo), tempoAteOFimDeJogo);
+        StartCoroutine(EsperarEMostrarFimDeJogo());
     }
 
-    void MostrarFimDeJogo()
+    // WaitForSecondsRealtime, e nao WaitForSeconds nem Invoke: os dois ultimos contam
+    // tempo ESCALADO. Se o jogador apertasse pausa durante a animacao de morte, o
+    // timeScale ia a zero, a espera nunca terminava e o jogo ficava presa na pausa
+    // para sempre. O tempo real ignora a pausa e a tela de fim de jogo sempre chega.
+    IEnumerator EsperarEMostrarFimDeJogo()
     {
-        GameManager.FimDeJogo();
+        yield return new WaitForSecondsRealtime(tempoAteOFimDeJogo);
+        GameManager.MorreuOJogador();
     }
 
     // Enter e Stay so carimbam a hora do ultimo encosto. Quem decide se ele esta no

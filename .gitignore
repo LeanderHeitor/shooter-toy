@@ -112,3 +112,11 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+/_recuperacao-crash-18-09/
+/shooter-toy-webgl.zip
+
+# Pacote do MCP da Unity. Ele vem EMBARCADO em Packages/ com 523 MB, mas o
+# manifest.json ja o resolve da registry pela versao - quem clonar o repo
+# recebe o mesmo pacote sem carregar a copia local junto.
+/Packages/com.unity.ai.assistant/
+/ProjectSettings/Packages/
