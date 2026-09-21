@@ -1,8 +1,9 @@
 using UnityEngine;
 
 // EnemyDeath.cs
-// Pedacinho de morte que os DOIS inimigos usam (faca e fuzil): eles morrem com um tiro so.
-// Fica separado porque a bala precisa de um jeito unico de matar qualquer inimigo.
+// Pedacinho de morte que TODO inimigo usa (faca, fuzil e os chefes). Os rebeldes
+// morrem com um tiro so; o chefe e o unico com vida maior que 1.
+// Fica separado porque a bala precisa de um jeito unico de ferir qualquer inimigo.
 public class EnemyDeath : MonoBehaviour
 {
     public Animator animator;          // arraste o Animator do inimigo
@@ -29,12 +30,33 @@ public class EnemyDeath : MonoBehaviour
     // por ser o mais perigoso dos dois - quem arrisca mais, recebe mais.
     public int moedasQueSolta = 1;
 
+    // ----- VIDA -----
+    // Todo rebelde tem 1: morre com um tiro, que e a identidade do jogo. So o chefe
+    // tem mais, e e por isso que so ele ganha barra de vida no HUD. Toda bala tira 1,
+    // de qualquer arma: as armas continuam diferindo na forma do tiro, nunca no dano.
+    public int vidaMaxima = 1;
+    [HideInInspector] public int vida = 1;
+
+    // Quanto da vida maxima a granada arranca. No rebelde e tudo. No chefe e uma
+    // fatia: se a granada matasse o chefe, a luta inteira custaria 10 moedas.
+    [Range(0f, 1f)] public float fracaoDaGranada = 1f;
+
+    // Tanque nao sangra.
+    public bool sangra = true;
+
     // Os scripts de comportamento (EnemyKnife / EnemyRifle) olham isto pra parar de andar.
     public bool isMorto = false;
 
     private SpriteRenderer spriteRenderer;
     private Material materialNormal;
     private static Material materialDeFlash;   // vem de Assets/Resources, um pra todos
+
+    // Awake e nao Start: a bala pode acertar no mesmo quadro em que o inimigo nasce,
+    // antes do Start dele rodar, e ai encontraria a vida ainda zerada.
+    void Awake()
+    {
+        vida = Mathf.Max(1, vidaMaxima);
+    }
 
     void Start()
     {
@@ -57,6 +79,33 @@ public class EnemyDeath : MonoBehaviour
         }
     }
 
+    // Chamado pela bala e pelo rocket. No rebelde e a mesma coisa que Morrer, porque
+    // a vida dele e 1. No chefe, os golpes antes do ultimo so piscam.
+    public void Ferir(int dano, bool pagaMoeda = true)
+    {
+        if (isMorto == true) return;
+
+        vida = vida - dano;
+        if (vida <= 0)
+        {
+            vida = 0;
+            Morrer(pagaMoeda);
+            return;
+        }
+
+        // O mesmo flash do abate: sem ele, atirar num chefe de 30 de vida parece
+        // atirar numa parede, e o jogador acha que esta errando.
+        Piscar();
+    }
+
+    // Chamado pela granada. Nunca paga moeda, nem no ultimo golpe: a explosao nao
+    // pode devolver o proprio preco.
+    public void AtingirComGranada()
+    {
+        int dano = Mathf.Max(1, Mathf.CeilToInt(vidaMaxima * fracaoDaGranada));
+        Ferir(dano, false);
+    }
+
     // "pagaMoeda" so e false na granada: la o abate conta, mas o chao nao paga, senao
     // a explosao devolveria o proprio preco. A bala usa o padrao e paga normalmente.
     public void Morrer(bool pagaMoeda = true)
@@ -68,8 +117,9 @@ public class EnemyDeath : MonoBehaviour
         if (animator != null) animator.SetBool("isMorto", true);
         if (meuColisor != null) meuColisor.enabled = false;
 
+        vida = 0;
         Piscar();
-        Espirrar();
+        if (sangra) Espirrar();
         GameManager.ContarAbate();
         if (pagaMoeda) SoltarMoedas();
 

@@ -18,7 +18,8 @@ public enum TipoDeHorda
 //
 // De cinco em cinco a regra troca: em vez de pedir abates, a horda pede que o
 // jogador fique vivo. A troca existe para que a arma comprada na loja encontre, de
-// vez em quando, um problema que ela sozinha nao resolve.
+// vez em quando, um problema que ela sozinha nao resolve. Quando o relogio zera,
+// entra um chefe, e a horda so acaba quando ele cai.
 public class Horda : MonoBehaviour
 {
     // ----- TAMANHO DAS HORDAS -----
@@ -30,7 +31,19 @@ public class Horda : MonoBehaviour
 
     // De quantas em quantas hordas vem uma de resistencia.
     public int resistenciaACada = 5;
-    public float segundosDeResistencia = 30f;
+
+    // Curto de proposito: a resistencia agora e so a abertura. O prato principal
+    // da horda e o chefe que entra quando o relogio zera.
+    public float segundosDeResistencia = 15f;
+
+    // ----- CHEFES -----
+    // Nomes dos prefabs em Assets/Resources, na ordem em que aparecem: a primeira
+    // resistencia traz o primeiro, a segunda o segundo, e depois o ciclo recomeca.
+    public string[] chefes = { "ChefeMinigun", "ChefeDiCokka" };
+
+    // Quanto tempo depois da queda do chefe o cerco abre. E o tempo das explosoes:
+    // abrir no mesmo quadro tiraria o palco da unica cena grande do jogo.
+    public float esperaDepoisDoChefe = 1.6f;
 
     // ----- PAGAMENTO -----
     // O bonus de horda limpa e o unico dinheiro que NAO exige ir buscar. E a parte
@@ -78,6 +91,12 @@ public class Horda : MonoBehaviour
 
     private float xQuePrecisaAlcancar = 0f;
     private float comecaSozinhaEm = 0f;
+
+    // O chefe da resistencia atual. O bool diz se ele ja foi chamado: o Chefe em
+    // si vira nulo quando a carcaca some, e isso nao pode parecer "ainda nao veio".
+    private bool chefeEmCampo = false;
+    private Chefe chefe;
+    private float terminaEm = -1f;
 
     void Awake()
     {
@@ -140,12 +159,61 @@ public class Horda : MonoBehaviour
             return;
         }
 
+        // Segunda parte da resistencia: o chefe esta em campo e a horda so acaba
+        // quando ele cair.
+        if (chefeEmCampo)
+        {
+            if (terminaEm < 0f && (chefe == null || chefe.EstaMorto()))
+                terminaEm = Time.time + esperaDepoisDoChefe;
+
+            if (terminaEm > 0f && Time.time >= terminaEm) Terminar();
+            return;
+        }
+
         segundosRestantes = segundosRestantes - Time.deltaTime;
         if (segundosRestantes <= 0f)
         {
             segundosRestantes = 0f;
-            Terminar();
+            ChamarChefe();
         }
+    }
+
+    // O relogio zerou: a torneira fecha, os rebeldes recuam e entra o chefe. Ele
+    // luta sozinho de proposito - com rebelde em volta, a barra de vida viraria
+    // mais um numero na tela em vez de ser o assunto da luta.
+    void ChamarChefe()
+    {
+        if (spawner != null) spawner.Parar();
+        DispensarOsQueSobraram();
+
+        GameObject prefab = null;
+        if (chefes != null && chefes.Length > 0)
+        {
+            int qual = ((numero / resistenciaACada) - 1) % chefes.Length;
+            prefab = Resources.Load<GameObject>(chefes[Mathf.Max(0, qual)]);
+        }
+
+        // Sem prefab a resistencia acaba como acabava antes do chefe existir.
+        if (prefab == null)
+        {
+            Terminar();
+            return;
+        }
+
+        // Entra pela parede mais longe do jogador, para ter espaco de aparecer
+        // andando antes de ser um perigo.
+        // A folga e o tamanho do proprio chefe: o tanque e largo, e nascer a 1,5 da
+        // parede deixava metade dele enterrada nela.
+        Chefe modelo = prefab.GetComponent<Chefe>();
+        float folga = (modelo != null ? modelo.meiaLarguraDoCorpo : 1f) + 0.3f;
+
+        float x = jogador.position.x;
+        bool esquerdaMaisLonge = (x - Cerco.limiteEsquerdo) > (Cerco.limiteDireito - x);
+        float xDoChefe = esquerdaMaisLonge ? Cerco.limiteEsquerdo + folga : Cerco.limiteDireito - folga;
+
+        GameObject go = Instantiate(prefab, new Vector3(xDoChefe, cerco.alturaDoChao, 0f), Quaternion.identity);
+        chefe = go.GetComponent<Chefe>();
+        chefeEmCampo = true;
     }
 
     void EsperarOJogadorAvancar()
@@ -190,14 +258,17 @@ public class Horda : MonoBehaviour
             segundosRestantes = segundosDeResistencia;
 
             // Sem limite de quantos nascem: aqui matar nao adianta nada, e essa e
-            // justamente a licao da horda.
-            if (spawner != null) spawner.ComecarSemLimite();
+            // justamente a licao da horda. A 10 vem mais rapido que a 5.
+            if (spawner != null) spawner.ComecarSemLimite(numero / resistenciaACada);
         }
     }
 
     void Terminar()
     {
         emCombate = false;
+        chefeEmCampo = false;
+        chefe = null;
+        terminaEm = -1f;
 
         ultimoBonus = (tipo == TipoDeHorda.Resistencia) ? bonusDeResistencia : bonusDeQuota;
         GameManager.GanharMoedas(ultimoBonus);

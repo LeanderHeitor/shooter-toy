@@ -81,6 +81,10 @@ public class Moeda : MonoBehaviour
             float lado = ((i - meioDaFila) * espacoEntreMoedas)
                        + Random.Range(-espalhamento, espalhamento) * 0.1f;
 
+            // A fila de 15 moedas do tanque tem 9 unidades: com ele encostado na
+            // parede, metade caia do lado de fora, onde o jogador nao alcanca.
+            lado = Cerco.ManterDentro(onde.x + lado) - onde.x;
+
             // Todas nascem no mesmo ponto, no corpo do rebelde, e o pulo e que as
             // leva ate o lugar delas na fila.
             GameObject go = Instantiate(prefab, onde, Quaternion.identity);

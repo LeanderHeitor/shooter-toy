@@ -111,7 +111,8 @@ public class Granada : MonoBehaviour
             // Conta abate (senao a quota da horda nunca fecha), mas NAO solta moeda.
             // Com moeda, uma granada no meio de 8 rebeldes pagaria de volta o proprio
             // preco, e a punicao do item de 50 pontos desapareceria.
-            alvos[i].Morrer(false);
+            // No chefe ela arranca so uma fatia da vida (ver EnemyDeath).
+            alvos[i].AtingirComGranada();
         }
 
         // As balas do fuzileiro em voo somem junto: morrer para um tiro disparado por
@@ -121,6 +122,9 @@ public class Granada : MonoBehaviour
         {
             if (balas[i].isBalaInimiga) Destroy(balas[i].gameObject);
         }
+
+        Obus[] obuses = FindObjectsByType<Obus>(FindObjectsSortMode.None);
+        for (int i = 0; i < obuses.Length; i++) Destroy(obuses[i].gameObject);
 
         claraoAte = Time.time + duracaoDoClarao;
         if (tremor != null) tremor.GenerateImpulseWithForce(forcaDoTremor);

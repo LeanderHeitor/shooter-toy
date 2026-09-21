@@ -1,136 +1,147 @@
 # Handoff - Shooter Toy / DIU3
 
-Sessão de 18/09/2026 (sexta). Projeto Unity 2D em
-`C:\Users\heitor.silva\Desktop\shooter-toy`, branch `main`, limpa no início da sessão.
+Atualizado na segunda, 21/09/2026. Projeto Unity 2D em
+`C:\Users\heitor.silva\Desktop\shooter-toy`, branch `main`, igual ao `origin/main`
+(GitHub `LeanderHeitor/shooter-toy`).
 
 ## Onde ler antes de qualquer coisa
-
-Não repito aqui o que já está nos arquivos do repo:
 
 | Arquivo | O que tem |
 |---|---|
 | `DIU3 - Survival Game - Next Generation.md` | O enunciado. 400 pontos, itens obrigatórios |
 | `Dicas para cumprir DIU3.md` | Roteiro de 7 dias sugerido pelo professor |
-| `CONTEXT.md` | **Glossário.** Foi reescrito nesta sessão. Leia inteiro antes de codar |
-| `PLANO_DIU3.md` | **Plano.** Economia, hordas, calendário, ordem de corte. Criado nesta sessão |
-| `README.md` | Estado do DIU2. Ainda não menciona nada do DIU3 |
-| `PLANO_DESAFIO2.md` | Plano do desafio anterior, histórico |
+| `CONTEXT.md` | **Glossário.** Leia inteiro antes de codar. Está no `.git/info/exclude`: não vai para o GitHub |
+| `PLANO_DIU3.md` | **Plano.** Economia, hordas, calendário, ordem de corte |
+| `README.md` | **Desatualizado:** ainda descreve só o DIU2 |
+| `ROTEIRO_VIDEO.md` | **Desatualizado:** roteiro do Desafio 2. Também está no exclude |
 
 ## Prazo
 
-**Quinta-feira, 24/09/2026.** Calendário dia a dia está no `PLANO_DIU3.md`.
-O domingo 20/09 foi deixado livre de propósito, como reserva.
+**Quinta-feira, 24/09/2026.** Todo o código do plano está pronto. O que sobra é entrega.
 
-## O que foi feito nesta sessão
+## Estado: todo o escopo do plano está implementado
 
-1. Sessão de grilling completa (4 rodadas). Todas as decisões de design fechadas.
-2. `CONTEXT.md` reescrito: 9 termos novos, 4 definições antigas corrigidas.
-3. `PLANO_DIU3.md` criado.
-4. Primeiro item de código: a fonte (detalhes abaixo).
+Nada da lista de corte do `PLANO_DIU3.md` precisou ser cortado.
 
-**Nada foi commitado ainda.** `git status` vai mostrar 4 arquivos modificados/novos.
+| Commit | O que entrou |
+|---|---|
+| `672a7c9` | Fonte Comic Sans como asset (WebGL), máquina de estados, menus em `OnGUI` |
+| `e5c629d` | Moeda como objeto no chão, com prazo de 7 s |
+| `a0304bd` | Cerco elástico, hordas de quota, Horda de Resistência, Cinemachine |
+| `5dd9cc3` | Granada (K, 10 moedas, tremor pelo Impulse) |
+| `89d1d2a` | Loja, prisioneiro, colete, shotgun, metralhadora, rocket |
 
-## Estado do código - IMPORTANTE, NÃO VERIFICADO
+### Como a loja ficou (último commit)
 
-O trabalho de maior risco do plano (Comic Sans no WebGL) foi adiantado, mas
-**não foi compilado nem testado**:
+- `Horda.Terminar` chama o prisioneiro na **metade do caminho** até onde a próxima horda
+  começa (`avancoParaComecar * 0.5`). `Horda.Comecar` o dispensa.
+- O prisioneiro nasce amarrado (`POW_Tied`) e se solta (`POW_Idle`) quando o jogador
+  chega perto. Não usa colisor, só a distância em x.
+- **E** (ou W / seta para cima) abre a loja; **E ou Esc** fecha; **1-4** compram. O
+  estado novo `Estado.Loja` congela o mundo como a pausa.
+- `GameManager.quadroDaUltimaTroca` impede que uma tecla troque de tela duas vezes no
+  mesmo quadro (o Esc que fecha a loja virava pausa, por causa da ordem dos `Update`).
+- A `Loja` é criada por `AddComponent` no `GameManager.Awake`. **A cena não foi
+  editada.** O prisioneiro é um prefab em `Assets/Resources/Prisioneiro.prefab`.
+- `Arsenal` é uma classe static (arma, munição, coletes), zerada no
+  `GameManager.Awake`.
+- Colete: absorve o golpe e dá `invencivelDepoisDoColete` (1,2 s) piscando.
+- Rocket: `BulletScript.raioDaExplosao > 0`, mata pela distância em x e desenha o
+  círculo do `Explosao.cs`.
 
-- `Assets/Fonts/ComicSansMS.ttf` - cópia de `C:\Windows\Fonts\comic.ttf`, já importada
-  pelo Unity (guid `9ccc7bad66d211f41a596e95973eb22e`)
-- `Assets/Scripts/HUD.cs` - trocado `Font.CreateDynamicFontFromOSFont` por um campo
-  `public Font fonte`. O `OnDestroy` que dava `Destroy(fonte)` foi removido de
-  propósito: com asset ele apagaria o arquivo do projeto
-- `Assets/Scenes/SampleScene.unity` - a referência da fonte foi escrita **direto no
-  YAML** do componente HUD (que fica no GameObject `GameManager`)
+### O que foi testado e o que não foi
 
-**Primeira coisa a fazer na próxima sessão:** pedir para o usuário clicar na janela do
-Unity (força o recompile), depois dar Play e confirmar que os textos aparecem em Comic
-Sans. Se o Unity perguntar sobre a cena, é **recarregar do disco**, não salvar por cima.
+Testado no Play **por comandos do MCP**, sem teclado:
+- posição do prisioneiro
+- preços e cobrança
+- recarga de munição e aviso de troca de arma
+- 3 balas da shotgun
+- volta à pistola no último tiro
+- colete absorvendo o golpe
+- rocket matando exatamente os inimigos dentro do raio
+- reset de tudo na morte
+- screenshot da tela da loja
 
-Também foi encontrado e removido um campo órfão no YAML do HUD (`tamanhoDaLetra: 22`,
-de uma versão antiga do script). Sem efeito visual.
+**Nunca testado com teclado de verdade:**
+- entrar e sair da loja com E e Esc
+- segurar J com a metralhadora
+- o balanço da economia
+
+Ponto a observar: com um rebelde da faca grudado, 3 coletes somem em ~4 s (um a cada
+1,2 s). Se incomodar, a correção é empurrar o rebelde para trás quando o colete quebra.
+
+## O que falta, em ordem
+
+1. **Playtest com teclado** (os itens acima). Os 75% de drop continuam sendo o primeiro
+   número a mexer se a economia ficar sovina
+2. **Build WebGL novo.** `Build/WebGL` e `shooter-toy-webgl.zip` são de 19/09, de
+   antes de tudo do DIU3. Gerar de novo, subir no play.unity.com, testar no navegador.
+   No navegador o Esc é do browser: o P existe como pausa garantida
+3. **README** reescrito para o DIU3
+4. **Roteiro e vídeo** de até 10 min
+5. Push final no GitHub
+
+### Fora do plano, pendente de decisão do usuário
+
+A arte de chefes para as hordas 5 e 10 entrou no commit `e0e1212`, em
+`Assets/Art/Characters/BOSS HORDER 5/` e `BOSS HORDER 10/`. **Não existe código nem
+plano para chefe**, e hoje a horda 5 é a de Resistência. Recomendei deixar para depois
+da entrega; o usuário ainda não respondeu.
+
+O usuário depois disse que não precisava ter subido a arte. Ofereci removê-la (commit
+apagando, ou force push tirando do histórico) e **ele ainda não escolheu**. Não mexer
+sem ele pedir.
+
+`Assets/_Recovery/` é resto de crash do Unity e ficou fora do git de propósito.
 
 ## Unity MCP - como ele se comporta aqui
 
-O MCP oficial da Unity (`com.unity.ai.assistant`) foi instalado pelo usuário durante a
-sessão e está conectado. Dois servidores aparecem na lista (`mcp__unity__` e
-`mcp__unity-mcp__`); usei o `mcp__unity__` e funcionou.
+Use o servidor `mcp__unity__` (aparecem dois; este funciona).
 
-**Armadilha que custou tempo:** o Editor **só recompila scripts quando a janela ganha
-foco**. Enquanto ele está sem foco, `Unity_ManageGameObject` com
-`set_component_property` falha com "Property not found" para qualquer campo novo, e
-nem `Assets/Refresh` via `Unity_ManageMenuItem` resolve. Quando isso acontecer:
-peça o foco ao usuário, ou escreva no YAML da cena como fiz.
-
-`Unity_ReadConsole` e `Unity_ManageAsset` (Import) funcionam sem foco.
-
-Warnings benignos no console que podem ser ignorados: coleta de assinatura de um
-`claude.exe.old.*` órfão, e "Account API did not become accessible" quando o Editor
-está sem foco.
+- `Unity_RunCommand` **bloqueia `System.Reflection`**. Para chamar método privado, use
+  `SendMessage("NomeDoMetodo", arg)`
+- Armadilha: `SendMessage("X", 0)` com o **literal** 0 cai na sobrecarga de
+  `SendMessageOptions` e o método não recebe o argumento. Passe uma variável `int`
+- `GetInstanceID()` está obsoleto nesta versão; é `GetEntityId()`. O ID é grande demais
+  para o JSON do `Unity_Camera_Capture`, que falha. Para ver a tela, use
+  `ScreenCapture.CaptureScreenshot("<scratchpad>/x.png")` no Play e leia o PNG
+  (pega o `OnGUI` também)
+- `Assets/Refresh` pelo `Unity_ManageMenuItem` compilou e importou sem precisar do
+  foco na janela nesta sessão. Na anterior não funcionava: se um campo novo não
+  aparecer, peça ao usuário para clicar na janela do Unity
+- Em teste, lembre que a horda começa sozinha 12 s depois do cerco abrir
+  (`segundosAteComecarSozinha`). Faça o que depende do intervalo num comando só
+- Warnings benignos: "Account API did not become accessible" e a assinatura de um
+  `claude.exe.old.*` órfão
 
 ## Decisões já fechadas - NÃO reabrir
 
-O racional completo está no `PLANO_DIU3.md`. O que importa aqui é que **já foram
-discutidas e decididas**, então não vale a pena propor alternativas de novo:
-
-- Mundo: **cerco elástico** (não é arena com Tilemap, e não é o corredor infinito puro)
-- Câmera: **Cinemachine** (não IA de inimigo). O pacote **ainda não foi instalado**
-- Defesa: **colete que absorve 1 golpe**, nunca barra de vida. O "morre com um tiro"
-  é a identidade do jogo e está protegido no `CONTEXT.md`
+- Mundo: **cerco elástico**
+- Câmera: **Cinemachine** (não IA de inimigo)
+- Defesa: **colete que absorve 1 golpe**, nunca barra de vida
 - Armas: diferem na **forma do tiro**, nunca em dano. Uma arma por vez
-- Menus: **máquina de estados numa cena só**, desenhada em `OnGUI`. Sem Canvas,
-  sem cenas separadas
-- Morte reseta **tudo**: horda 1, sem moedas, sem coletes, só pistola
-- Prisioneiro: **quadrado amarelo** por enquanto. A folha do POW virá depois
-- Fonte: o usuário escolheu o `comic.ttf` da Microsoft, ciente de que existe a
-  alternativa livre (Comic Neue). Foi decisão dele; não reabrir
-
-### Dois pontos onde o usuário decidiu contra a minha recomendação
-
-Registro para o próximo agente não gastar tempo re-argumentando:
-
-1. **75% de chance de drop de moeda.** Eu argumentei que aleatoriedade atrapalha a
-   experiência de ganância (o jogador não consegue planejar). O usuário pediu duas
-   vezes. Está implementado como campo ajustável justamente para subir/descer em
-   playtest.
-2. **Escopo completo, sem cortes prévios.** Eu propus cortar Rocket, colete
-   empilhável e multiplicador de sequência por causa do prazo. O usuário quis fazer
-   tudo e cortar depois se precisar. A resposta foi **ordenar** o trabalho: a lista de
-   corte no fim do `PLANO_DIU3.md` só contém folhas, que podem ser abandonadas na
-   quarta sem desfazer nada.
-
-## Próximos passos, em ordem
-
-1. Recompilar (foco na janela) e validar a fonte no Play
-2. **Build WebGL de teste** com o jogo como está, subir no play.unity.com.
-   É o item que decide se a semana é tranquila ou corrida
-3. Segunda: máquina de estados + 3 menus + Cinemachine (100 pts)
-4. Terça: cerco elástico + hordas + moedas (o maior dia)
-5. Quarta: loja, prisioneiro, armas, granada, Horda de Resistência
-6. Quinta: build final, README, vídeo de até 10 min, GitHub. Sem código novo
-
-O `README.md` ainda descreve só o DIU2 e vai precisar ser reescrito na quinta.
+- Menus: **máquina de estados numa cena só**, em `OnGUI`. Sem Canvas
+- Morte reseta **tudo**
+- Fonte: `comic.ttf` da Microsoft, escolha do usuário
+- **75% de drop** e **escopo completo** foram decididos pelo usuário contra a minha
+  recomendação. Não re-argumentar
 
 ## Sobre trabalhar com este usuário
 
-- Fala e escreve em **português**. Todo o repo (código, comentários, docs) é PT-BR
-- É estudante; pede explicação quando não conhece um conceito ("o que seria máquina de
-  estados?", "como assim navegador?"). Explique com exemplo concreto, sem jargão
-- Gosta de propor ideias novas no meio da execução. Várias foram boas (munição na
-  loja, horda de resistência a cada 5). Vale avaliar de verdade em vez de aceitar ou
-  recusar de imediato - mas também vale lembrar do relógio
-- Os comentários do código existente são didáticos e explicam o *porquê*, não o *quê*.
-  Mantenha esse estilo (veja `PlayerScript.cs` e `Spawner.cs` como referência)
+- Fala e escreve em **português**. Todo o repo é PT-BR
+- **Commits:** em português, curtos, sem travessão e **sem nenhuma menção ao Claude**
+  (nada de Co-Authored-By nem link de sessão). É trabalho acadêmico. Ele reforçou isso
+  nesta sessão
+- Commit é local: ele espera que "subir" signifique **push**. Confirme o push quando
+  disser que algo subiu
+- É estudante; explique conceitos com exemplo concreto, sem jargão
+- Propõe ideias novas no meio da execução. Avalie de verdade, mas lembre do relógio
+- Comentários do código são didáticos e explicam o *porquê*. Mantenha o estilo
+- Os arquivos misturam CRLF e LF. Preserve o que cada arquivo já usa
 
 ## Suggested skills
 
-Chame com a ferramenta Skill:
-
-- **`mattpocock-skills:domain-modeling`** - sempre que um termo novo aparecer ou uma
-  definição do `CONTEXT.md` for contrariada pelo código. O glossário é a espinha do
-  projeto e foi construído com cuidado; mantenha-o atualizado na hora, não em lote
-- **`mattpocock-skills:grilling`** - se o usuário propuser mudança grande de escopo.
-  Ele responde bem a perguntas numeradas com recomendação
-- **`mattpocock-skills:diagnosing-bugs`** - quando o build WebGL quebrar (é provável
-  que quebre em alguma coisa além da fonte)
-- **`claude-in-chrome`** - para validar o build publicado no play.unity.com no fim
+- **`mattpocock-skills:domain-modeling`**: ao aparecer termo novo (ex.: "chefe") ou o
+  código contrariar o `CONTEXT.md`
+- **`mattpocock-skills:diagnosing-bugs`**: quando o build WebGL quebrar
+- **`claude-in-chrome`**: para validar o build publicado no play.unity.com

@@ -65,7 +65,7 @@ public class BulletScript : MonoBehaviour
             if (inimigo.isMorto) return;
 
             if (raioDaExplosao > 0f) Explodir();
-            else inimigo.Morrer();
+            else inimigo.Ferir(1);
         }
         Destroy(gameObject);
     }
@@ -84,7 +84,7 @@ public class BulletScript : MonoBehaviour
             if (Mathf.Abs(vivos[i].transform.position.x - centro.x) > raioDaExplosao) continue;
 
             EnemyDeath ed = vivos[i].GetComponent<EnemyDeath>();
-            if (ed != null) ed.Morrer();
+            if (ed != null) ed.Ferir(1);
         }
 
         Explosao.Criar(centro, raioDaExplosao);

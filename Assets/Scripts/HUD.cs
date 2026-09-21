@@ -274,6 +274,11 @@ public class HUD : MonoBehaviour
                   " moedas   ·   o prisioneiro tem uma loja";
             cor = new Color(0.65f, 0.95f, 0.7f);
         }
+        else if (Horda.tipo == TipoDeHorda.Resistencia && Chefe.atual != null)
+        {
+            DesenharBarraDoChefe(tamanho);
+            return;
+        }
         else if (Horda.tipo == TipoDeHorda.Resistencia)
         {
             // O tempo aparece arredondado para CIMA: com o arredondamento normal o
@@ -289,6 +294,91 @@ public class HUD : MonoBehaviour
         }
 
         Escrever(Faixa(tamanho * 1.1f, dica.fontSize * 2f), texto, dica, cor);
+    }
+
+    // ----- BARRA DO CHEFE -----
+    // A unica barra de vida do jogo, e por isso ela e grande e fica no centro do
+    // topo: e o objetivo inteiro da luta. O jogador nunca tem barra - ele continua
+    // morrendo com um golpe - e o contraste e parte da tensao.
+    private Chefe chefeDaBarra;
+    private float barraApareceuEm;
+    private float vidaVista = 1f;
+    private float rastro = 0f;
+    private float golpeEm = -1f;
+
+    void DesenharBarraDoChefe(int tamanho)
+    {
+        Chefe c = Chefe.atual;
+
+        if (c != chefeDaBarra)
+        {
+            chefeDaBarra = c;
+            barraApareceuEm = Time.time;
+            vidaVista = 1f;
+            rastro = 0f;
+            golpeEm = -1f;
+        }
+
+        float vida = c.FracaoDaVida();
+
+        // Na entrada a barra enche do zero, como nos fliperamas: o jogador ve o
+        // tamanho da luta sendo anunciado antes do primeiro tiro.
+        float enche = Mathf.Clamp01((Time.time - barraApareceuEm) / 1.2f);
+        float mostrada = Mathf.Min(vida, enche);
+
+        if (vida < vidaVista - 0.0001f) golpeEm = Time.time;
+        vidaVista = vida;
+
+        // O rastro amarelo mostra quanto o ultimo golpe tirou. Ele espera um
+        // instante e so entao desce: e o que faz um tiro de shotgun, com tres
+        // chumbos entrando juntos, parecer maior que um tiro de pistola.
+        if (rastro < mostrada) rastro = mostrada;
+        else if (Time.time - golpeEm > 0.45f)
+            rastro = Mathf.MoveTowards(rastro, mostrada, Time.deltaTime * 0.7f);
+
+        // O nome no lugar do texto da horda.
+        string titulo = c.EstaMorto()
+            ? c.nome + " derrotado!"
+            : "Horda " + Horda.numero + "   ·   " + c.nome;
+        Color corDoTitulo = c.EstaMorto() ? corDeDestaque : new Color(1f, 0.45f, 0.35f);
+        Escrever(Faixa(tamanho * 1.1f, dica.fontSize * 2f), titulo, dica, corDoTitulo);
+
+        float largura = Screen.width * 0.55f;
+        float altura = Mathf.Max(10f, tamanho * 0.7f);
+        float x = (Screen.width - largura) * 0.5f;
+        float y = tamanho * 2.2f;
+        float borda = Mathf.Max(2f, tamanho * 0.08f);
+
+        Retangulo(new Rect(x - borda, y - borda, largura + (borda * 2f), altura + (borda * 2f)), Color.black);
+        Retangulo(new Rect(x, y, largura, altura), new Color(0.22f, 0.05f, 0.05f, 0.95f));
+        Retangulo(new Rect(x, y, largura * rastro, altura), new Color(1f, 0.85f, 0.35f));
+
+        // Abaixo da metade o chefe descansa menos entre ataques (ver Chefe), e a
+        // barra pulsa para contar isso sem texto nenhum.
+        Color corDaVida = new Color(0.85f, 0.12f, 0.1f);
+        if (vida <= 0.5f && vida > 0f)
+            corDaVida = Color.Lerp(corDaVida, new Color(1f, 0.45f, 0.1f), 0.5f + 0.5f * Mathf.Sin(Time.time * 10f));
+        if (Time.time - golpeEm < 0.07f) corDaVida = Color.white;
+
+        Retangulo(new Rect(x, y, largura * mostrada, altura), corDaVida);
+        // Um brilho no terco de cima, para a barra ter volume em vez de ser um risco.
+        Retangulo(new Rect(x, y, largura * mostrada, altura * 0.3f), new Color(1f, 1f, 1f, 0.25f));
+
+        // Marcas a cada 10%: dao escala a barra, e o jogador consegue contar
+        // quantos pedacos ainda faltam.
+        for (int i = 1; i < 10; i++)
+        {
+            float tx = x + (largura * i / 10f);
+            Retangulo(new Rect(tx - 1f, y, 2f, altura), new Color(0f, 0f, 0f, 0.45f));
+        }
+    }
+
+    void Retangulo(Rect onde, Color cor)
+    {
+        Color guardada = GUI.color;
+        GUI.color = cor;
+        GUI.DrawTexture(onde, Texture2D.whiteTexture);
+        GUI.color = guardada;
     }
 
     // Branco que some em 0,25s. Com o tempo congelado (pausa logo depois da granada)

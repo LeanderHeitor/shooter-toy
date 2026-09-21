@@ -16,6 +16,8 @@ daqui.
 | `...Non-Playable Characters - P.O.W.s _ Helpful NPCs.png` e `Metal Slug - POWs (Kodama).gif` | Prisioneiro da loja: amarrado (POW_Tied) e solto (POW_Idle) |
 | `...Miscellaneous - Items.png` | Moeda girando (Coin_Spin) |
 | `...Miscellaneous - Blood.gif` | Sangue do abate (Blood_Spray) |
+| `Assets/Art/Characters/BOSS HORDER 5/...Rebel Soldier (Mini-Gun).png` | Chefe da horda 5: Minigun_Walk, Minigun_Aim e Minigun_Fire |
+| `Assets/Art/Characters/BOSS HORDER 10/...Type 02 ''Di-Cokka'.png` | Chefe da horda 10: DiCokka_Drive, Aim, Fire e Wreck; o obus (DiCokka_Shell) e a fumaca das explosoes (Smoke_Explosion) |
 
 **Credito exigido pelo proprio pacote**, conforme escrito dentro da folha do Rifle Soldier:
 
@@ -25,7 +27,11 @@ daqui.
 > TILE-RIPPED BY: **Gussprint**
 > REQUIREMENTS FOR USE: **Give credit.**
 
-Sprites originais de **Metal Slug 3**, propriedade da **SNK/Playmore**. Rip por **Gussprint**.
+A folha do Di-Cokka pede o mesmo credito ao **Gussprint** ("give credit if used"). A folha
+da Minigun traz a assinatura de **Goemar** e os enderecos `retrogamezone.co.uk` e
+`metalslugsprites.co.uk` (Metal Slug Sprite Database).
+
+Sprites originais de **Metal Slug 3**, propriedade da **SNK/Playmore**. Rips por **Gussprint** e **Goemar**.
 Uso exclusivamente academico, sem fins comerciais, para a disciplina de Jogos Digitais.
 
 ## Cenario - NightForest

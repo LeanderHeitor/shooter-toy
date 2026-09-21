@@ -26,6 +26,13 @@ public class Spawner : MonoBehaviour
     // uma torneira aberta: e o ritmo que faz o jogador correr, nao a quantidade.
     public float intervaloDaResistencia = 0.7f;
 
+    // Cada Horda de Resistencia seguinte abre a torneira um pouco mais: a 10 nao pode
+    // ser a 5 de novo, senao o jogador que ja venceu uma vez sabe que vence sempre.
+    // O minimo existe porque abaixo dele o teto de vivos segura o ritmo de qualquer
+    // jeito, e o numero no Inspector mentiria sobre o que acontece no jogo.
+    public float encurtaACadaResistencia = 0.15f;
+    public float intervaloMinimoDaResistencia = 0.35f;
+
     // ----- ONDE NASCE -----
     public float segundosParaNascerPelasCostas = 60f;
     public float distanciaDoSpawn = 12f;   // um pouco fora da tela
@@ -61,10 +68,13 @@ public class Spawner : MonoBehaviour
     }
 
     // A Horda de Resistencia nao tem lote: e uma torneira aberta ate o prazo acabar.
-    // O ritmo dela sai daqui mesmo, de quem o tem no Inspector, e nao de quem chama.
-    public void ComecarSemLimite()
+    // O ritmo dela sai daqui mesmo, de quem o tem no Inspector, e nao de quem chama:
+    // a Horda so diz qual resistencia e esta (1 = a primeira).
+    public void ComecarSemLimite(int qualResistencia)
     {
-        Ligar(-1, intervaloDaResistencia);
+        float intervalo = intervaloDaResistencia
+                        - (encurtaACadaResistencia * (qualResistencia - 1));
+        Ligar(-1, Mathf.Max(intervaloMinimoDaResistencia, intervalo));
     }
 
     public void Parar()
