@@ -15,7 +15,8 @@ public enum Estado
     Jogando,    // a partida em si
     Pausado,    // congelado a pedido do jogador, com a partida intacta
     Loja,       // congelado enquanto o jogador compra do prisioneiro, entre hordas
-    FimDeJogo   // congelado porque o jogador morreu
+    FimDeJogo,  // congelado porque o jogador morreu
+    Vitoria     // congelado porque o chefe da ultima horda caiu
 }
 
 // GameManager.cs
@@ -42,6 +43,25 @@ public class GameManager : MonoBehaviour
     // (matando devagar) ou com poucos numa horda alta (correndo atras da moeda).
     public static int recordeDeHorda = 0;
 
+    // O recorde como estava ANTES desta partida. O recorde de verdade sobe no
+    // instante do abate, entao no fim de jogo ele ja e igual aos abates e nao da
+    // para dizer "faltaram 7". Guardar o de antes e o que permite a comparacao.
+    public static int recordeAntesDaPartida = 0;
+
+    // A vitoria mais rica da sessao: quantas moedas sobraram na mao ao vencer. So
+    // conta vitoria de proposito. Se contasse qualquer partida, o melhor jeito de
+    // bater o recorde seria nao gastar nada e morrer rico, e isso mataria a loja e a
+    // granada. Assim toda compra vira a pergunta "isto me ajuda a vencer, ou so me
+    // faz vencer mais pobre?".
+    public static int recordeDeMoedas = 0;
+    public static bool bateuRecordeDeMoedas = false;
+
+    // As telas finais ignoram teclas por um instante. Quem esta segurando ou
+    // martelando o J no tiroteio pularia a tela de morte ou de vitoria sem nem ler.
+    public float segundosAntesDeSair = 1.2f;
+    private static float esperaAntesDeSair = 1.2f;
+    private static float podeSairEm = 0f;
+
     // ----- MOEDAS -----
     // O unico recurso do jogo. NAO atravessa a morte: toda partida comeca pobre,
     // e e isso que torna cada gasto uma escolha em vez de um detalhe.
@@ -64,6 +84,9 @@ public class GameManager : MonoBehaviour
         // Cada partida comeca do zero. O recorde continua de onde estava.
         abates = 0;
         moedas = 0;
+        recordeAntesDaPartida = recorde;
+        bateuRecordeDeMoedas = false;
+        esperaAntesDeSair = segundosAntesDeSair;
         sequencia = 0;
         fimDaSequencia = 0f;
         janela = janelaDaSequencia;
@@ -119,7 +142,12 @@ public class GameManager : MonoBehaviour
                 // Recarrega a cena em vez de so trocar de estado: inimigos, tiros e
                 // a posicao do jogador precisam voltar ao inicio, e recarregar e
                 // mais confiavel do que tentar desfazer cada coisa na mao.
-                if (ApertouAlgumaTecla()) Reiniciar();
+                if (Time.unscaledTime >= podeSairEm && ApertouAlgumaTecla()) Reiniciar();
+                break;
+
+            case Estado.Vitoria:
+                // Igual ao fim de jogo: a partida acabou, a proxima nasce no menu.
+                if (Time.unscaledTime >= podeSairEm && ApertouAlgumaTecla()) Reiniciar();
                 break;
         }
     }
@@ -207,8 +235,25 @@ public class GameManager : MonoBehaviour
     // e ter os dois com o mesmo nome deixava o codigo ambiguo de ler.
     public static void MorreuOJogador()
     {
-        if (estado == Estado.FimDeJogo) return;
+        if (estado == Estado.FimDeJogo || estado == Estado.Vitoria) return;
+        podeSairEm = Time.unscaledTime + esperaAntesDeSair;
         IrPara(Estado.FimDeJogo);
+    }
+
+    // Chamado pela Horda quando o chefe da ultima horda cai. As moedas da mao viram
+    // placar: e aqui que o recorde de moedas e decidido.
+    public static void Venceu()
+    {
+        if (estado == Estado.FimDeJogo || estado == Estado.Vitoria) return;
+
+        if (moedas > recordeDeMoedas)
+        {
+            recordeDeMoedas = moedas;
+            bateuRecordeDeMoedas = true;
+        }
+
+        podeSairEm = Time.unscaledTime + esperaAntesDeSair;
+        IrPara(Estado.Vitoria);
     }
 
     public static void Reiniciar()

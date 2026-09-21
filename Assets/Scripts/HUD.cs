@@ -35,6 +35,13 @@ public class HUD : MonoBehaviour
     // em disputa, e por isso nao e a mesma cor da moeda.
     private static readonly Color corDeDestaque = new Color(1f, 0.85f, 0.25f);
 
+    // Sprites das telas finais, carregados uma vez do Resources. O OnGUI roda
+    // varias vezes por quadro, e carregar prefab ali dentro seria jogar tempo fora.
+    private Sprite[] quadrosDoPrisioneiro;
+    private string chefeCarregado;
+    private Sprite silhuetaDoChefe;
+    private string nomeDoChefe;
+
     private GUIStyle placar;
     private GUIStyle grande;
     private GUIStyle dica;
@@ -143,6 +150,7 @@ public class HUD : MonoBehaviour
             case Estado.Pausado:   DesenharPausa(tamanho);     break;
             case Estado.Loja:      DesenharLoja(tamanho);      break;
             case Estado.FimDeJogo: DesenharFimDeJogo(tamanho); break;
+            case Estado.Vitoria:   DesenharVitoria(tamanho);   break;
         }
 
         // No menu o placar nao aparece: nao ha partida acontecendo, e um "Abates: 0"
@@ -151,7 +159,8 @@ public class HUD : MonoBehaviour
         {
             DesenharPlacar(tamanho);
             DesenharArsenal(tamanho);
-            if (GameManager.estado != Estado.Loja) DesenharHorda(tamanho);
+            if (GameManager.estado != Estado.Loja && GameManager.estado != Estado.Vitoria)
+                DesenharHorda(tamanho);
         }
 
         if (GameManager.estado == Estado.Jogando) DesenharBalcao(tamanho);
@@ -272,6 +281,11 @@ public class HUD : MonoBehaviour
                 ? "siga em frente para a primeira horda"
                 : "Horda " + Horda.numero + " limpa   ·   +" + Horda.ultimoBonus +
                   " moedas   ·   o prisioneiro tem uma loja";
+
+            // O primeiro chefe caiu: o jogador precisa saber que o jogo tem fim, e
+            // que ja andou metade dele. Um objetivo visivel puxa mais que um infinito.
+            if (Horda.numero == Horda.hordaDaVitoria / 2)
+                texto = "METADE DO CAMINHO!   ·   " + texto;
             cor = new Color(0.65f, 0.95f, 0.7f);
         }
         else if (Horda.tipo == TipoDeHorda.Resistencia && Chefe.atual != null)
@@ -464,6 +478,10 @@ public class HUD : MonoBehaviour
             {
                 texto = texto + "   ·   horda " + GameManager.recordeDeHorda;
             }
+            if (GameManager.recordeDeMoedas > 0)
+            {
+                texto = texto + "   ·   vitória mais rica: " + GameManager.recordeDeMoedas + " moedas";
+            }
 
             Escrever(Faixa(meio + (linha * 1.5f), dica.fontSize * 2f),
                      texto, dica, corDeDestaque);
@@ -498,14 +516,33 @@ public class HUD : MonoBehaviour
         Veu(new Color(0.30f, 0.02f, 0.03f, 0.78f));
 
         float linha = tamanho * 1.5f;
-        float meio = (Screen.height * 0.5f) - linha;
+        float meio = (Screen.height * 0.5f) - (linha * 2.5f);
 
         float centroDoTitulo = meio + (linha * 0.5f);
         Escrever(Faixa(centroDoTitulo, grande.fontSize * 2f),
                  "VOCÊ MORREU", grande, new Color(1f, 0.25f, 0.2f));
 
+        // A comparacao com o recorde e o gancho do "so mais uma": "faltaram 3" doi
+        // mais que qualquer numero solto, porque diz que era possivel.
+        int antes = GameManager.recordeAntesDaPartida;
+        string comparacao;
+        Color corDaComparacao = corDeDestaque;
+        if (antes == 0)
+            comparacao = "Seu primeiro recorde: " + GameManager.abates + " abates";
+        else if (GameManager.abates > antes)
+            comparacao = "NOVO RECORDE!  " + GameManager.abates + " abates";
+        else
+        {
+            int faltaram = antes - GameManager.abates + 1;
+            comparacao = "Faltaram " + faltaram + (faltaram == 1 ? " abate" : " abates") + " para o recorde";
+            corDaComparacao = Color.white;
+        }
+        Escrever(Faixa(meio + (linha * 1.9f), dica.fontSize * 2f), comparacao, dica, corDaComparacao);
+
+        DesenharQuemEspera(tamanho, meio + (linha * 4.4f));
+
         string textoDica = "aperte qualquer tecla";
-        float centroDaDica = meio + (linha * 2f);
+        float centroDaDica = meio + (linha * 7.3f);
         Rect areaDica = Faixa(centroDaDica, dica.fontSize * 2f);
 
         // O desenho usa a tela toda, mas o mouse so deve acender a frase quando
@@ -519,5 +556,102 @@ public class HUD : MonoBehaviour
         Color corDica = alvoDoMouse.Contains(Event.current.mousePosition)
             ? Color.white : new Color(0.9f, 0.6f, 0.6f);
         Escrever(areaDica, textoDica, dica, corDica);
+    }
+
+    // A silhueta preta do proximo chefe que o jogador ainda nao derrubou. Mostrar so
+    // a sombra, e nao o desenho, e a provocacao: da vontade de ver quem e.
+    void DesenharQuemEspera(int tamanho, float centroY)
+    {
+        Horda horda = FindAnyObjectByType<Horda>();
+        if (horda == null) return;
+
+        int hordaDoChefe = horda.HordaDoProximoChefe(Horda.numero);
+        string prefab = horda.PrefabDoChefe(hordaDoChefe);
+        if (prefab != chefeCarregado)
+        {
+            chefeCarregado = prefab;
+            silhuetaDoChefe = null;
+            nomeDoChefe = null;
+
+            GameObject go = (prefab != null) ? Resources.Load<GameObject>(prefab) : null;
+            Chefe c = (go != null) ? go.GetComponent<Chefe>() : null;
+            if (c != null)
+            {
+                nomeDoChefe = c.nome;
+                if (c.quadrosAndando != null && c.quadrosAndando.Length > 0)
+                    silhuetaDoChefe = c.quadrosAndando[0];
+            }
+        }
+        if (nomeDoChefe == null) return;
+
+        float altura = tamanho * 4f;
+        DesenharSprite(silhuetaDoChefe, new Vector2(Screen.width * 0.5f, centroY), altura, Color.black);
+
+        Escrever(Faixa(centroY + altura * 0.5f + tamanho * 0.7f, dica.fontSize * 2f),
+                 "Horda " + hordaDoChefe + ": o " + nomeDoChefe + " te espera",
+                 dica, new Color(0.9f, 0.6f, 0.6f));
+    }
+
+    // Desenha um sprite solto no OnGUI, centrado no ponto pedido. Usado pelas telas
+    // finais, que ficam por cima de um mundo congelado e nao podem contar com um
+    // SpriteRenderer animando.
+    void DesenharSprite(Sprite sprite, Vector2 centro, float altura, Color cor)
+    {
+        if (sprite == null) return;
+
+        Texture2D tex = sprite.texture;
+        Rect r = sprite.textureRect;
+        Rect coords = new Rect(r.x / tex.width, r.y / tex.height, r.width / tex.width, r.height / tex.height);
+
+        float largura = altura * (r.width / r.height);
+        Rect onde = new Rect(centro.x - largura * 0.5f, centro.y - altura * 0.5f, largura, altura);
+
+        Color guardada = GUI.color;
+        GUI.color = cor;
+        GUI.DrawTextureWithTexCoords(onde, tex, coords);
+        GUI.color = guardada;
+    }
+
+    // A vitoria. O veu e dourado, a cor da moeda: e o dinheiro guardado que vira
+    // placar aqui. O prisioneiro aparece solto ao lado do texto porque ele e o
+    // motivo da vitoria: o unico personagem que nao queria te matar esta livre.
+    void DesenharVitoria(int tamanho)
+    {
+        Veu(new Color(0.25f, 0.18f, 0.02f, 0.82f));
+
+        float linha = tamanho * 1.5f;
+        float meio = (Screen.height * 0.5f) - linha * 2f;
+
+        Escrever(Faixa(meio, grande.fontSize * 2f), "você ganhou parabens", grande, corDeDestaque);
+
+        if (quadrosDoPrisioneiro == null)
+        {
+            GameObject go = Resources.Load<GameObject>("Prisioneiro");
+            Prisioneiro p = (go != null) ? go.GetComponent<Prisioneiro>() : null;
+            quadrosDoPrisioneiro = (p != null && p.quadrosSolto != null) ? p.quadrosSolto : new Sprite[0];
+        }
+
+        // O mundo esta congelado, entao a animacao anda pelo relogio real.
+        if (quadrosDoPrisioneiro.Length > 0)
+        {
+            int quadro = (int)(Time.unscaledTime * 8f) % quadrosDoPrisioneiro.Length;
+            // Ele pula de alegria: um seno no relogio real, sem precisar de sprite novo.
+            float pulo = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) * tamanho * 0.8f;
+            DesenharSprite(quadrosDoPrisioneiro[quadro],
+                           new Vector2(Screen.width * 0.5f, meio + linha * 2.3f - pulo),
+                           tamanho * 3f, Color.white);
+        }
+
+        Escrever(Faixa(meio + linha * 4.1f, dica.fontSize * 2f),
+                 "o prisioneiro está livre   ·   " + GameManager.abates + " abates",
+                 dica, Color.white);
+
+        string moedas = GameManager.bateuRecordeDeMoedas
+            ? "NOVO RECORDE!  vitória com " + GameManager.moedas + " moedas guardadas"
+            : "vitória com " + GameManager.moedas + " moedas   ·   a mais rica: " + GameManager.recordeDeMoedas;
+        Escrever(Faixa(meio + linha * 5.1f, dica.fontSize * 2f), moedas, dica, corDaMoeda);
+
+        Escrever(Faixa(meio + linha * 6.6f, dica.fontSize * 2f),
+                 "aperte qualquer tecla", dica, new Color(0.95f, 0.9f, 0.7f));
     }
 }

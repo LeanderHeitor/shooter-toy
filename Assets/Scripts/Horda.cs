@@ -45,6 +45,10 @@ public class Horda : MonoBehaviour
     // abrir no mesmo quadro tiraria o palco da unica cena grande do jogo.
     public float esperaDepoisDoChefe = 1.6f;
 
+    // A horda cujo chefe, ao cair, vence a partida. E a segunda Horda de
+    // Resistencia: o Di-Cokka. Dois chefes, dois atos, e o jogo tem um fim.
+    public const int hordaDaVitoria = 10;
+
     // ----- PAGAMENTO -----
     // O bonus de horda limpa e o unico dinheiro que NAO exige ir buscar. E a parte
     // segura da renda: da para contar com ela, e e por isso que ela e pequena perto
@@ -186,12 +190,8 @@ public class Horda : MonoBehaviour
         if (spawner != null) spawner.Parar();
         DispensarOsQueSobraram();
 
-        GameObject prefab = null;
-        if (chefes != null && chefes.Length > 0)
-        {
-            int qual = ((numero / resistenciaACada) - 1) % chefes.Length;
-            prefab = Resources.Load<GameObject>(chefes[Mathf.Max(0, qual)]);
-        }
+        string nome = PrefabDoChefe(numero);
+        GameObject prefab = (nome != null) ? Resources.Load<GameObject>(nome) : null;
 
         // Sem prefab a resistencia acaba como acabava antes do chefe existir.
         if (prefab == null)
@@ -276,6 +276,15 @@ public class Horda : MonoBehaviour
 
         if (spawner != null) spawner.Parar();
 
+        // A ultima horda nao abre loja nem cerco: nao existe proxima. O bonus entra
+        // antes, porque ele tambem conta para a vitoria mais rica.
+        if (numero >= hordaDaVitoria)
+        {
+            DispensarOsQueSobraram();
+            GameManager.Venceu();
+            return;
+        }
+
         // Na horda de quota nao sobra ninguem vivo - ela so acaba quando o ultimo
         // morre. Na de resistencia sobra, e quem sobrou recua: deixar inimigos soltos
         // enquanto o jogador faz compras transformaria o intervalo numa emboscada.
@@ -293,6 +302,24 @@ public class Horda : MonoBehaviour
             float x = jogador.position.x + (avancoParaComecar * 0.5f);
             loja.ChamarPrisioneiro(new Vector3(x, cerco.alturaDoChao, 0f));
         }
+    }
+
+    // A primeira horda de chefe a partir da horda "n": a propria "n" se ela ja for
+    // de resistencia, senao a proxima. O HUD usa no fim de jogo para mostrar quem
+    // esta esperando o jogador.
+    public int HordaDoProximoChefe(int n)
+    {
+        int arredondada = ((n + resistenciaACada - 1) / resistenciaACada) * resistenciaACada;
+        return Mathf.Max(resistenciaACada, arredondada);
+    }
+
+    // O nome do prefab do chefe de uma horda de resistencia. Um lugar so para a
+    // conta, que o ChamarChefe e o HUD precisam concordar sobre quem vem.
+    public string PrefabDoChefe(int hordaDeResistencia)
+    {
+        if (chefes == null || chefes.Length == 0) return null;
+        int qual = ((hordaDeResistencia / resistenciaACada) - 1) % chefes.Length;
+        return chefes[Mathf.Max(0, qual)];
     }
 
     void AbrirIntervalo()
