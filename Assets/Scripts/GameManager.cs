@@ -30,6 +30,11 @@ public class GameManager : MonoBehaviour
     public static int abates = 0;
     public static int recorde = 0;
 
+    // A horda mais longe alcancada na sessao. Anda junto com o recorde de abates,
+    // mas conta outra coisa: da para morrer com muitos abates numa horda baixa
+    // (matando devagar) ou com poucos numa horda alta (correndo atras da moeda).
+    public static int recordeDeHorda = 0;
+
     // ----- MOEDAS -----
     // O unico recurso do jogo. NAO atravessa a morte: toda partida comeca pobre,
     // e e isso que torna cada gasto uma escolha em vez de um detalhe.
@@ -43,6 +48,10 @@ public class GameManager : MonoBehaviour
     private static float janela = 3f;   // copia static, porque ContarAbate e static
     private static float fimDaSequencia = 0f;
 
+    // A cada quantos abates encadeados a sequencia paga uma moeda a mais por abate.
+    public int abatesPorBonus = 5;
+    private static int passoDoBonus = 5;
+
     void Awake()
     {
         // Cada partida comeca do zero. O recorde continua de onde estava.
@@ -51,6 +60,7 @@ public class GameManager : MonoBehaviour
         sequencia = 0;
         fimDaSequencia = 0f;
         janela = janelaDaSequencia;
+        passoDoBonus = abatesPorBonus;
 
         // A cena nasce no menu, congelada. Isso tambem serve de rede de seguranca:
         // se a partida anterior acabou com o tempo parado, o IrPara conserta.
@@ -140,6 +150,24 @@ public class GameManager : MonoBehaviour
 
         moedas = moedas - quanto;
         return true;
+    }
+
+    // Chamado pela Horda quando uma horda e limpa. Conta a horda VENCIDA, nao a que
+    // estava em andamento na hora da morte: morrer no meio da horda 7 nao e ter
+    // chegado a horda 7.
+    public static void RegistrarHorda(int numero)
+    {
+        if (numero > recordeDeHorda) recordeDeHorda = numero;
+    }
+
+    // Quantas moedas A MAIS cada abate paga por causa da sequencia atual.
+    // E o que remunera o jogador por continuar avancando: a sequencia morre sozinha
+    // se ele parar ou recuar, entao o bonus premia exatamente o comportamento que o
+    // jogo quer, sem precisar avisar ninguem disso.
+    public static int BonusDeSequencia()
+    {
+        if (passoDoBonus <= 0) return 0;
+        return sequencia / passoDoBonus;
     }
 
     public static void ContarAbate()

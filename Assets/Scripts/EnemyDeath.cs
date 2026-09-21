@@ -15,6 +15,9 @@ public class EnemyDeath : MonoBehaviour
     // Ele tem que ser curto pra nao esconder a animacao de morte, que comeca no mesmo quadro.
     public float tempoDoFlash = 0.06f;
 
+    // De onde o sangue sai, medido a partir dos pes do rebelde.
+    public float alturaDoPeito = 0.7f;
+
     // ----- MOEDA -----
     // Nem todo abate paga: matar nao e o mesmo que ser pago. Os 75% existem para que
     // o jogador nao consiga contar com o dinheiro do proximo tiro antes de atirar.
@@ -32,7 +35,6 @@ public class EnemyDeath : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Material materialNormal;
     private static Material materialDeFlash;   // vem de Assets/Resources, um pra todos
-    private static GameObject moedaPrefab;     // idem: evita arrastar nos dois prefabs
 
     void Start()
     {
@@ -65,6 +67,7 @@ public class EnemyDeath : MonoBehaviour
         if (meuColisor != null) meuColisor.enabled = false;
 
         Piscar();
+        Espirrar();
         GameManager.ContarAbate();
         SoltarMoedas();
 
@@ -75,25 +78,27 @@ public class EnemyDeath : MonoBehaviour
     // custa alguma coisa, e e essa ida que o cerco transforma em risco.
     void SoltarMoedas()
     {
-        if (moedaPrefab == null) moedaPrefab = Resources.Load<GameObject>("Moeda");
-        if (moedaPrefab == null) return;
-
         if (Random.value > chanceDeSoltar) return;
 
-        // Bonus de sequencia: a cada 5 abates encadeados, uma moeda a mais por abate.
-        // E o que paga o jogador por continuar avancando - a sequencia morre sozinha
-        // se ele parar ou recuar, entao o bonus premia exatamente o comportamento
-        // que o jogo quer.
-        int quantas = moedasQueSolta + (GameManager.sequencia / 5);
+        // Quanto este inimigo vale, mais o que a sequencia esta pagando por abate.
+        // A regra do bonus mora no GameManager, que e quem define a sequencia: aqui
+        // o assunto e a morte de um rebelde, nao a economia do jogo.
+        int quantas = moedasQueSolta + GameManager.BonusDeSequencia();
 
         // O transform do inimigo fica nos PES dele e o desenho da moeda e centrado,
         // entao sem esta subida ela nasceria metade enterrada no chao.
-        Vector3 onde = transform.position + new Vector3(0f, 0.25f, 0f);
+        Moeda.Soltar(transform.position + new Vector3(0f, 0.25f, 0f), quantas);
+    }
 
-        for (int i = 0; i < quantas; i++)
-        {
-            Instantiate(moedaPrefab, onde, Quaternion.identity);
-        }
+    // O sangue espirra para longe do jogador, que e de onde o tiro veio.
+    // Sai da altura do peito: o transform fica nos pes, e sangue saindo do chao
+    // pareceria respingo de poca, nao de tiro.
+    void Espirrar()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        bool paraDireita = (player == null) || (transform.position.x >= player.transform.position.x);
+
+        Sangue.Soltar(transform.position + new Vector3(0f, alturaDoPeito, 0f), paraDireita);
     }
 
     // Troca o material por um que pinta a silhueta inteira de branco.

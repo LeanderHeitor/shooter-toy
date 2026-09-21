@@ -13,6 +13,7 @@ public class EnemyRifle : MonoBehaviour
     public EnemyDeath morte;              // arraste o EnemyDeath do proprio inimigo
 
     private Transform alvo;
+    private PlayerScript alvoScript;
     private SpriteRenderer spriteRenderer;
     private float proximoTiro = 0f;
 
@@ -22,13 +23,28 @@ public class EnemyRifle : MonoBehaviour
         if (morte == null) morte = GetComponent<EnemyDeath>();
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null) alvo = player.transform;
+        if (player != null)
+        {
+            alvo = player.transform;
+            alvoScript = player.GetComponent<PlayerScript>();
+        }
     }
 
     void Update()
     {
         if (morte != null && morte.isMorto == true) return;
         if (alvo == null) return;
+
+        // Player morto, tiroteio encerrado. O animator volta pra pose parada, senao
+        // ele fica congelado em posicao de tiro mirando um corpo no chao.
+        if (alvoScript != null && alvoScript.isMorto == true)
+        {
+            if (morte != null && morte.animator != null)
+            {
+                morte.animator.SetBool("isAtirando", false);
+            }
+            return;
+        }
 
         // Sempre encara o player.
         float direcao = (alvo.position.x > transform.position.x) ? 1f : -1f;

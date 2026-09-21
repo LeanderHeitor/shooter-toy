@@ -26,8 +26,14 @@ public class HUD : MonoBehaviour
     public string titulo = "SHOOTER TOY";
 
     // O mesmo ouro do sprite da moeda, para o numero no canto e o objeto no chao
-    // serem lidos como a mesma coisa sem ninguem precisar explicar.
+    // serem lidos como a mesma coisa sem ninguem precisar explicar. A sequencia usa
+    // este mesmo ouro porque ela tambem e dinheiro: o que ela faz e pagar mais moeda
+    // por abate.
     private static readonly Color corDaMoeda = new Color(1f, 0.82f, 0.29f);
+
+    // O ouro das telas: titulo e recorde. E um destaque de tela parada, nao um valor
+    // em disputa, e por isso nao e a mesma cor da moeda.
+    private static readonly Color corDeDestaque = new Color(1f, 0.85f, 0.25f);
 
     private GUIStyle placar;
     private GUIStyle grande;
@@ -136,7 +142,46 @@ public class HUD : MonoBehaviour
 
         // No menu o placar nao aparece: nao ha partida acontecendo, e um "Abates: 0"
         // no canto da tela de titulo so polui.
-        if (GameManager.estado != Estado.Menu) DesenharPlacar(tamanho);
+        if (GameManager.estado != Estado.Menu)
+        {
+            DesenharPlacar(tamanho);
+            DesenharHorda(tamanho);
+        }
+    }
+
+    // O topo da tela, no centro. A horda fica aqui, e nao no canto com o resto do
+    // placar, porque ela nao e um numero que o jogador consulta quando sobra tempo:
+    // e o objetivo imediato dele. No meio do tiroteio o olho ja esta perto do centro.
+    void DesenharHorda(int tamanho)
+    {
+        string texto;
+        Color cor;
+
+        if (Horda.emCombate == false)
+        {
+            // Entre hordas o texto deixa de informar e passa a pedir: e o unico
+            // momento em que o jogo diz ao jogador o que fazer para continuar.
+            texto = (Horda.numero == 0)
+                ? "siga em frente para a primeira horda"
+                : "Horda " + Horda.numero + " limpa   ·   +" + Horda.ultimoBonus +
+                  " moedas   ·   siga em frente";
+            cor = new Color(0.65f, 0.95f, 0.7f);
+        }
+        else if (Horda.tipo == TipoDeHorda.Resistencia)
+        {
+            // O tempo aparece arredondado para CIMA: com o arredondamento normal o
+            // cronometro mostraria "0s" por meio segundo ainda com inimigo em cima
+            // do jogador, e ele leria isso como o jogo tendo travado.
+            texto = "RESISTA   ·   " + Mathf.CeilToInt(Horda.segundosRestantes) + "s";
+            cor = new Color(1f, 0.35f, 0.3f);
+        }
+        else
+        {
+            texto = "Horda " + Horda.numero + "   ·   restam " + Mathf.Max(0, Horda.restam);
+            cor = Color.white;
+        }
+
+        Escrever(Faixa(tamanho * 1.1f, dica.fontSize * 2f), texto, dica, cor);
     }
 
     // O canto superior esquerdo durante a partida.
@@ -163,8 +208,15 @@ public class HUD : MonoBehaviour
         // ja e o aviso de que voce acabou de perde-la.
         if (GameManager.sequencia >= 2)
         {
+            // O bonus aparece junto do numero porque, sem ele, o rebelde da faca
+            // soltando duas moedas parecia defeito. Visivel, vira motivo para o
+            // jogador nao deixar a sequencia morrer.
+            string texto = "Sequência: " + GameManager.sequencia;
+            int bonus = GameManager.BonusDeSequencia();
+            if (bonus > 0) texto = texto + "  ·  +" + bonus + (bonus == 1 ? " moeda" : " moedas");
+
             Escrever(new Rect(margem, margem + (linha * 3f), largura, linha),
-                     "Sequência: " + GameManager.sequencia, placar, new Color(1f, 0.85f, 0.2f));
+                     texto, placar, corDaMoeda);
         }
     }
 
@@ -177,7 +229,7 @@ public class HUD : MonoBehaviour
         float meio = Screen.height * 0.5f;
 
         Escrever(Faixa(meio - (linha * 1.4f), grande.fontSize * 2f),
-                 titulo, grande, new Color(1f, 0.85f, 0.25f));
+                 titulo, grande, corDeDestaque);
 
         Escrever(Faixa(meio + (linha * 0.3f), dica.fontSize * 2f),
                  "aperte qualquer tecla para começar", dica, Color.white);
@@ -186,8 +238,17 @@ public class HUD : MonoBehaviour
         // "Recorde: 0" nao informa nada e ocupa espaco.
         if (GameManager.recorde > 0)
         {
+            // A horda entra no recorde junto dos abates porque as duas medem coisas
+            // diferentes: da para morrer com muitos abates numa horda baixa, ou com
+            // poucos numa horda alta. Uma so das duas contaria meia historia.
+            string texto = "Recorde: " + GameManager.recorde + " abates";
+            if (GameManager.recordeDeHorda > 0)
+            {
+                texto = texto + "   ·   horda " + GameManager.recordeDeHorda;
+            }
+
             Escrever(Faixa(meio + (linha * 1.5f), dica.fontSize * 2f),
-                     "Recorde: " + GameManager.recorde, dica, new Color(1f, 0.85f, 0.25f));
+                     texto, dica, corDeDestaque);
         }
 
         // Os controles no rodape: e a unica tela onde o jogador tem tempo de ler.

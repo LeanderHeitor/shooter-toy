@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 9968149233f180e459899a80088a5838, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fa31947a995189344a9129cfcb51e7a3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -146,4 +146,14 @@ MonoBehaviour:
   tempoDeVida: 7
   avisoAntesDeSumir: 2.5
   espalhamentoHorizontal: 0.6
-  impulsoAoNascer: 3.5
+  quadros:
+  - {fileID: 21300000, guid: fa31947a995189344a9129cfcb51e7a3, type: 3}
+  - {fileID: 21300000, guid: e6b351d71a852fa4c96f1bf314458702, type: 3}
+  - {fileID: 21300000, guid: 63d0081539678f5418606b8ee5c82648, type: 3}
+  - {fileID: 21300000, guid: 66f0add50da91cd4aaae3b540c136bee, type: 3}
+  - {fileID: 21300000, guid: 9cf0ef8f80b160a46bea1323e252fb86, type: 3}
+  - {fileID: 21300000, guid: 1ccc05c662fd02448b13db0669e3bef8, type: 3}
+  - {fileID: 21300000, guid: 780cdfe0cd430d84eb8e0187f9fe5e5e, type: 3}
+  - {fileID: 21300000, guid: f267c3707760b9a4c96cd9a80eb71df1, type: 3}
+  - {fileID: 21300000, guid: 6b7653be769fe7744b14ba59e1cfa93d, type: 3}
+  quadrosPorSegundo: 12

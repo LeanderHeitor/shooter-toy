@@ -6,6 +6,11 @@ using UnityEngine;
 // fator = 0   -> a camada gruda na camera (parece parada na tela). E o caso da nevoa e dos raios de luz.
 // fator = 1   -> a camada fica parada no mundo (anda junto com o chao). E o caso da camada do mato.
 // entre 0 e 1 -> quanto maior, mais rapido a camada passa.
+//
+// Mesma razao do GroundScroller: este script le a posicao da camera no LateUpdate, e
+// quem a escreve e o Cinemachine, tambem no LateUpdate. Sem ordem declarada a camada
+// pode ser posicionada com a camera do quadro anterior, e o fundo inteiro treme.
+[DefaultExecutionOrder(1000)]
 public class ParallaxLayer : MonoBehaviour
 {
     public float fator = 0.5f;

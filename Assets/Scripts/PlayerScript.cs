@@ -47,7 +47,12 @@ public class PlayerScript : MonoBehaviour
 
     // Relogio do proximo tiro permitido, e estado da morte.
     private float proximoTiro = 0f;
-    private bool isMorto = false;
+    // Os inimigos olham isto pra parar de perseguir, do mesmo jeito que os scripts de
+    // comportamento deles olham o EnemyDeath.isMorto. Precisa ser publico porque a
+    // morte dura 1,45s ANTES da tela de fim de jogo aparecer: nesse tempo o jogo
+    // ainda esta no estado Jogando, e sem este aviso o rebelde continua atacando um
+    // cadaver bem no momento em que o jogador esta olhando para a tela.
+    public bool isMorto = false;
     private float invencivelAte = 0f;
 
     void Start()
