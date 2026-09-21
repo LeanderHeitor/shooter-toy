@@ -25,6 +25,13 @@ public static class Arsenal
     public static int municao = 0;   // so vale para a arma comprada; a pistola e infinita
     public static int coletes = 0;
 
+    // A Segunda chance: comprada, espera guardada ate o jogador morrer. So uma por
+    // partida - "comprada" continua true depois de gasta, para a loja nao vender de
+    // novo. E o item caro dos sonhos: o jogador ve o preco desde a primeira loja, e
+    // cada granada jogada o afasta dela.
+    public static bool segundaChance = false;
+    public static bool segundaChanceComprada = false;
+
     // Mais que isto e comprar imortalidade em vez de uma segunda chance.
     public const int maximoDeColetes = 3;
 
@@ -35,6 +42,16 @@ public static class Arsenal
         arma = TipoDeArma.Pistola;
         municao = 0;
         coletes = 0;
+        segundaChance = false;
+        segundaChanceComprada = false;
+    }
+
+    // Devolve true se a Segunda chance salvou o jogador desta morte.
+    public static bool UsarSegundaChance()
+    {
+        if (segundaChance == false) return false;
+        segundaChance = false;
+        return true;
     }
 
     // Troca de arma. A municao que sobrava da anterior se perde junto com ela: a

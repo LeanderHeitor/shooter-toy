@@ -48,6 +48,10 @@ public class Loja : MonoBehaviour
     public int precoDoRocket = 45;
     public int tirosDoRocket = 8;
     public int precoDaMunicaoRocket = 22;
+
+    // Cara de proposito: na horda 1 ela e inalcancavel, e e isso que da ao jogador
+    // um motivo para guardar moeda em vez de gastar tudo na primeira loja.
+    public int precoDaSegundaChance = 60;
     public int tirosDaMunicaoRocket = 4;
 
     // Quanto tempo o aviso de compra fica na tela. Conta em tempo REAL: dentro da
@@ -167,13 +171,14 @@ public class Loja : MonoBehaviour
         if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame) return 1;
         if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame) return 2;
         if (kb.digit4Key.wasPressedThisFrame || kb.numpad4Key.wasPressedThisFrame) return 3;
+        if (kb.digit5Key.wasPressedThisFrame || kb.numpad5Key.wasPressedThisFrame) return 4;
         return -1;
     }
 
-    // A loja tem sempre quatro linhas: o colete e uma para cada arma. A linha da
-    // arma que o jogador ja carrega vira a linha da municao dela - comprar a mesma
-    // arma de novo nao faz sentido, e oito linhas na primeira visita seria ler
-    // demais para quem tem 12 moedas.
+    // A loja tem sempre cinco linhas: o colete, uma para cada arma e a Segunda
+    // chance. A linha da arma que o jogador ja carrega vira a linha da municao
+    // dela - comprar a mesma arma de novo nao faz sentido, e oito linhas na
+    // primeira visita seria ler demais para quem tem 12 moedas.
     public List<ItemDaLoja> Itens()
     {
         List<ItemDaLoja> itens = new List<ItemDaLoja>();
@@ -190,6 +195,15 @@ public class Loja : MonoBehaviour
         itens.Add(LinhaDaArma(TipoDeArma.Shotgun, "3 tiros em leque"));
         itens.Add(LinhaDaArma(TipoDeArma.Metralhadora, "segure para atirar"));
         itens.Add(LinhaDaArma(TipoDeArma.Rocket, "explode em área"));
+
+        ItemDaLoja chance = new ItemDaLoja();
+        chance.nome = "Segunda chance";
+        chance.preco = precoDaSegundaChance;
+        chance.indisponivel = Arsenal.segundaChanceComprada;
+        chance.detalhe = Arsenal.segundaChanceComprada
+            ? "só uma por partida"
+            : "ao morrer, você renasce e o cerco explode";
+        itens.Add(chance);
 
         return itens;
     }
@@ -245,6 +259,11 @@ public class Loja : MonoBehaviour
         if (indice == 0)
         {
             Arsenal.coletes = Arsenal.coletes + 1;
+        }
+        else if (indice == 4)
+        {
+            Arsenal.segundaChance = true;
+            Arsenal.segundaChanceComprada = true;
         }
         else
         {

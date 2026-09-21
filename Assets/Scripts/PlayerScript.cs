@@ -257,6 +257,16 @@ public class PlayerScript : MonoBehaviour
             return;
         }
 
+        // A Segunda chance: o golpe que mataria o jogador explode o cerco inteiro e
+        // ele continua de pe. Tempo de invencibilidade de quem acabou de nascer,
+        // porque na pratica e isso que ele fez.
+        if (Arsenal.UsarSegundaChance())
+        {
+            invencivelAte = Time.time + tempoInvencivel;
+            Granada.LimparCerco();
+            return;
+        }
+
 
         isMorto = true;
 

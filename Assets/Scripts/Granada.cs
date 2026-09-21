@@ -122,6 +122,20 @@ public class Granada : MonoBehaviour
         usosNaPartida = usosNaPartida + 1;
         custoAgora = custo + (aumentoPorUso * usosNaPartida);
 
+        Explodir(alvos, forcaDoTremor);
+    }
+
+    // A Segunda chance explode o cerco inteiro como uma granada, mas de graca: o
+    // preco dela ja foi pago na loja. Um lugar so para as duas explosoes, para elas
+    // nunca discordarem sobre quem morre.
+    public static void LimparCerco()
+    {
+        if (instancia == null) return;
+        instancia.Explodir(instancia.AlvosNoCerco(), instancia.forcaDoTremor * 1.5f);
+    }
+
+    void Explodir(EnemyDeath[] alvos, float forca)
+    {
         for (int i = 0; i < alvos.Length; i++)
         {
             // Conta abate (senao a quota da horda nunca fecha), mas NAO solta moeda.
@@ -143,7 +157,7 @@ public class Granada : MonoBehaviour
         for (int i = 0; i < obuses.Length; i++) Destroy(obuses[i].gameObject);
 
         claraoAte = Time.time + duracaoDoClarao;
-        if (tremor != null) tremor.GenerateImpulseWithForce(forcaDoTremor);
+        if (tremor != null) tremor.GenerateImpulseWithForce(forca);
     }
 
     // Um tremor menor, pedido de fora. A granada continua sendo o maior da tela.

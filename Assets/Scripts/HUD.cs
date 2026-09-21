@@ -191,6 +191,12 @@ public class HUD : MonoBehaviour
             string texto = (Arsenal.coletes == 1) ? "1 colete" : Arsenal.coletes + " coletes";
             Escrever(Linha(1), texto, direita, new Color(0.55f, 0.8f, 1f));
         }
+
+        if (Arsenal.segundaChance)
+        {
+            int n = (Arsenal.coletes > 0) ? 2 : 1;
+            Escrever(Linha(n), "segunda chance", direita, corDaMoeda);
+        }
     }
 
     // O "E" em cima da cabeca do prisioneiro, so quando o jogador esta perto o
@@ -262,7 +268,7 @@ public class HUD : MonoBehaviour
         }
 
         Escrever(Faixa(rodape + linha * 1.1f, dica.fontSize * 2f),
-                 "1-4 comprar   ·   E ou Esc sair", dica, new Color(0.8f, 0.8f, 0.75f));
+                 "1-5 comprar   ·   E ou Esc sair", dica, new Color(0.8f, 0.8f, 0.75f));
     }
 
     // O topo da tela, no centro. A horda fica aqui, e nao no canto com o resto do
