@@ -131,6 +131,10 @@ public class HUD : MonoBehaviour
         int tamanho = Mathf.Max(14, Screen.height / divisorDaLetra);
         PrepararEstilos(tamanho);
 
+        // O clarao vem antes de tudo, por baixo dos textos: o placar continua legivel
+        // no instante da explosao, que e quando o jogador olha o saldo que acabou de cair.
+        DesenharClarao();
+
         // As telas centrais vem ANTES do placar, para que o placar continue legivel
         // por cima do veu em vez de sumir atras dele.
         switch (GameManager.estado)
@@ -184,6 +188,17 @@ public class HUD : MonoBehaviour
         Escrever(Faixa(tamanho * 1.1f, dica.fontSize * 2f), texto, dica, cor);
     }
 
+    // Branco que some em 0,25s. Com o tempo congelado (pausa logo depois da granada)
+    // o clarao fica parado junto com o mundo, que e o que se espera de uma pausa.
+    void DesenharClarao()
+    {
+        float falta = Granada.claraoAte - Time.time;
+        if (falta <= 0f) return;
+
+        float forca = Mathf.Clamp01(falta / Granada.duracaoDoClarao);
+        Veu(new Color(1f, 1f, 0.92f, 0.85f * forca));
+    }
+
     // O canto superior esquerdo durante a partida.
     void DesenharPlacar(int tamanho)
     {
@@ -217,6 +232,15 @@ public class HUD : MonoBehaviour
 
             Escrever(new Rect(margem, margem + (linha * 3f), largura, linha),
                      texto, placar, corDaMoeda);
+        }
+
+        // Aparece embaixo do saldo, que e para onde o olho vai quando o K nao funciona.
+        if (Time.time < Granada.avisoDeSaldoAte)
+        {
+            int falta = Granada.faltouNoAviso;
+            Escrever(new Rect(margem, margem + (linha * 4f), largura, linha),
+                     "Granada: faltam " + falta + (falta == 1 ? " moeda" : " moedas"),
+                     placar, new Color(1f, 0.4f, 0.35f));
         }
     }
 
@@ -253,7 +277,7 @@ public class HUD : MonoBehaviour
 
         // Os controles no rodape: e a unica tela onde o jogador tem tempo de ler.
         Escrever(Faixa(Screen.height - (linha * 1.1f), dica.fontSize * 2f),
-                 "A D mover   ·   ESPAÇO pular   ·   J atirar   ·   P pausa",
+                 "A D mover   ·   ESPAÇO pular   ·   J atirar   ·   K granada   ·   P pausa",
                  dica, new Color(0.75f, 0.78f, 0.85f));
     }
 

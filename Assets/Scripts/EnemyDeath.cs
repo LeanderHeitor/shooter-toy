@@ -57,7 +57,9 @@ public class EnemyDeath : MonoBehaviour
         }
     }
 
-    public void Morrer()
+    // "pagaMoeda" so e false na granada: la o abate conta, mas o chao nao paga, senao
+    // a explosao devolveria o proprio preco. A bala usa o padrao e paga normalmente.
+    public void Morrer(bool pagaMoeda = true)
     {
         if (isMorto == true) return;
         isMorto = true;
@@ -69,7 +71,7 @@ public class EnemyDeath : MonoBehaviour
         Piscar();
         Espirrar();
         GameManager.ContarAbate();
-        SoltarMoedas();
+        if (pagaMoeda) SoltarMoedas();
 
         Destroy(gameObject, tempoAteSumir);
     }
