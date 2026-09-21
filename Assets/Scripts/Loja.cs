@@ -29,21 +29,25 @@ public class Loja : MonoBehaviour
     // A municao custa o mesmo por tiro que a arma nova (ou um pouco mais). Refil e
     // conveniencia para quem esta pobre, nunca um atalho mais barato - senao o
     // jogador compra uma arma uma vez e ignora as outras para sempre.
-    public int precoDoColete = 8;
+    //
+    // Tudo 1,5x mais caro que na primeira versao: no playtest a moeda sobrava e na
+    // horda 3 ja dava para ter tudo. Loja que vende tudo cedo nao faz ninguem
+    // guardar moeda, e guardar moeda e a experiencia do jogo.
+    public int precoDoColete = 12;
 
-    public int precoDaShotgun = 15;
+    public int precoDaShotgun = 22;
     public int tirosDaShotgun = 20;
-    public int precoDaMunicaoShotgun = 8;
+    public int precoDaMunicaoShotgun = 12;
     public int tirosDaMunicaoShotgun = 10;
 
-    public int precoDaMetralhadora = 20;
+    public int precoDaMetralhadora = 30;
     public int tirosDaMetralhadora = 60;
-    public int precoDaMunicaoMetralhadora = 10;
+    public int precoDaMunicaoMetralhadora = 15;
     public int tirosDaMunicaoMetralhadora = 30;
 
-    public int precoDoRocket = 30;
+    public int precoDoRocket = 45;
     public int tirosDoRocket = 8;
-    public int precoDaMunicaoRocket = 15;
+    public int precoDaMunicaoRocket = 22;
     public int tirosDaMunicaoRocket = 4;
 
     // Quanto tempo o aviso de compra fica na tela. Conta em tempo REAL: dentro da

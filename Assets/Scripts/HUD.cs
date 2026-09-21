@@ -410,7 +410,8 @@ public class HUD : MonoBehaviour
         // a loja. Um numero que some quando chega a zero esconde justamente o momento
         // em que a decisao fica mais dura.
         Escrever(new Rect(margem, margem + (linha * 2f), largura, linha),
-                 "Moedas: " + GameManager.moedas, placar, corDaMoeda);
+                 "Moedas: " + GameManager.moedas + "   ·   granada " + Granada.custoAgora,
+                 placar, corDaMoeda);
 
         // A sequencia so aparece quando esta valendo alguma coisa. Ela sumir da tela
         // ja e o aviso de que voce acabou de perde-la.

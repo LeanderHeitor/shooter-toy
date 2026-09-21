@@ -15,6 +15,17 @@ public class Granada : MonoBehaviour
 {
     public int custo = 10;
 
+    // Cada granada da partida custa mais que a anterior (10, 15, 20...). Sem isso o
+    // jogador rico resolve toda horda no K, e a granada deixa de ser uma decisao para
+    // virar um botao de limpar a tela. Encarecer faz a primeira ser facil de usar e a
+    // terceira ser uma pergunta de verdade: "vale mesmo o rocket que eu nao compro?"
+    public int aumentoPorUso = 5;
+    public static int usosNaPartida = 0;
+
+    // O preco da proxima, para o HUD mostrar sempre: preco que muda precisa estar a
+    // vista, senao o jogador descobre na hora errada que nao tem como pagar.
+    public static int custoAgora = 10;
+
     // Quanto a camera treme. O tremor nao e enfeite: e o que faz o jogador sentir
     // que gastou alguma coisa grande, e nao que apertou um botao de limpar a tela.
     public float forcaDoTremor = 0.6f;
@@ -42,6 +53,8 @@ public class Granada : MonoBehaviour
         // nascer com o clarao da anterior ainda aceso.
         claraoAte = -1f;
         avisoDeSaldoAte = -1f;
+        usosNaPartida = 0;
+        custoAgora = custo;
     }
 
     void Start()
@@ -94,17 +107,20 @@ public class Granada : MonoBehaviour
     {
         EnemyDeath[] alvos = AlvosNoCerco();
 
-        // Sem ninguem para matar, nao cobra. Pagar 10 moedas por uma explosao no
+        // Sem ninguem para matar, nao cobra. Pagar moedas por uma explosao no
         // vazio (entre hordas, por exemplo) seria punir o jogador por apertar a tecla
         // errada, e nao pela escolha de ganancia que a granada existe para criar.
         if (alvos.Length == 0) return;
 
-        if (GameManager.Gastar(custo) == false)
+        if (GameManager.Gastar(custoAgora) == false)
         {
-            faltouNoAviso = custo - GameManager.moedas;
+            faltouNoAviso = custoAgora - GameManager.moedas;
             avisoDeSaldoAte = Time.time + 1.5f;
             return;
         }
+
+        usosNaPartida = usosNaPartida + 1;
+        custoAgora = custo + (aumentoPorUso * usosNaPartida);
 
         for (int i = 0; i < alvos.Length; i++)
         {
