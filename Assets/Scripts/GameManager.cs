@@ -15,6 +15,7 @@ public enum Estado
     Jogando,    // a partida em si
     Pausado,    // congelado a pedido do jogador, com a partida intacta
     Loja,       // congelado enquanto o jogador compra do prisioneiro, entre hordas
+    Metade,     // congelado por um instante: o primeiro chefe caiu, falta o segundo
     FimDeJogo,  // congelado porque o jogador morreu
     Vitoria     // congelado porque o chefe da ultima horda caiu
 }
@@ -145,6 +146,11 @@ public class GameManager : MonoBehaviour
                 if (Time.unscaledTime >= podeSairEm && ApertouAlgumaTecla()) Reiniciar();
                 break;
 
+            case Estado.Metade:
+                // Volta para a MESMA partida: e um respiro, nao um fim.
+                if (Time.unscaledTime >= podeSairEm && ApertouAlgumaTecla()) IrPara(Estado.Jogando);
+                break;
+
             case Estado.Vitoria:
                 // Igual ao fim de jogo: a partida acabou, a proxima nasce no menu.
                 if (Time.unscaledTime >= podeSairEm && ApertouAlgumaTecla()) Reiniciar();
@@ -238,6 +244,16 @@ public class GameManager : MonoBehaviour
         if (estado == Estado.FimDeJogo || estado == Estado.Vitoria) return;
         podeSairEm = Time.unscaledTime + esperaAntesDeSair;
         IrPara(Estado.FimDeJogo);
+    }
+
+    // Chamado pela Horda quando o primeiro chefe cai. Para o jogo por um instante
+    // para dizer duas coisas: voce chegou longe, e o pior ainda vem. Sem essa pausa
+    // a queda da Minigun passava como mais uma horda limpa.
+    public static void ChegouNaMetade()
+    {
+        if (estado != Estado.Jogando) return;
+        podeSairEm = Time.unscaledTime + esperaAntesDeSair;
+        IrPara(Estado.Metade);
     }
 
     // Chamado pela Horda quando o chefe da ultima horda cai. As moedas da mao viram

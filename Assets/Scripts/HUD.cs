@@ -151,6 +151,7 @@ public class HUD : MonoBehaviour
             case Estado.Loja:      DesenharLoja(tamanho);      break;
             case Estado.FimDeJogo: DesenharFimDeJogo(tamanho); break;
             case Estado.Vitoria:   DesenharVitoria(tamanho);   break;
+            case Estado.Metade:    DesenharMetade(tamanho);    break;
         }
 
         // No menu o placar nao aparece: nao ha partida acontecendo, e um "Abates: 0"
@@ -159,7 +160,8 @@ public class HUD : MonoBehaviour
         {
             DesenharPlacar(tamanho);
             DesenharArsenal(tamanho);
-            if (GameManager.estado != Estado.Loja && GameManager.estado != Estado.Vitoria)
+            if (GameManager.estado != Estado.Loja && GameManager.estado != Estado.Vitoria &&
+                GameManager.estado != Estado.Metade)
                 DesenharHorda(tamanho);
         }
 
@@ -545,7 +547,7 @@ public class HUD : MonoBehaviour
         }
         Escrever(Faixa(meio + (linha * 1.9f), dica.fontSize * 2f), comparacao, dica, corDaComparacao);
 
-        DesenharQuemEspera(tamanho, meio + (linha * 4.4f));
+        DesenharQuemEspera(tamanho, meio + (linha * 4.4f), Horda.numero);
 
         string textoDica = "aperte qualquer tecla";
         float centroDaDica = meio + (linha * 7.3f);
@@ -566,12 +568,12 @@ public class HUD : MonoBehaviour
 
     // A silhueta preta do proximo chefe que o jogador ainda nao derrubou. Mostrar so
     // a sombra, e nao o desenho, e a provocacao: da vontade de ver quem e.
-    void DesenharQuemEspera(int tamanho, float centroY)
+    void DesenharQuemEspera(int tamanho, float centroY, int aPartirDaHorda)
     {
         Horda horda = FindAnyObjectByType<Horda>();
         if (horda == null) return;
 
-        int hordaDoChefe = horda.HordaDoProximoChefe(Horda.numero);
+        int hordaDoChefe = horda.HordaDoProximoChefe(aPartirDaHorda);
         string prefab = horda.PrefabDoChefe(hordaDoChefe);
         if (prefab != chefeCarregado)
         {
@@ -616,6 +618,27 @@ public class HUD : MonoBehaviour
         GUI.color = cor;
         GUI.DrawTextureWithTexCoords(onde, tex, coords);
         GUI.color = guardada;
+    }
+
+    // O respiro depois do primeiro chefe. Mesmo veu azul da pausa, porque e isso que
+    // ela e: o jogo parado, a partida intacta. A silhueta do tanque mostra que o
+    // "quase la" ainda tem um tamanho.
+    void DesenharMetade(int tamanho)
+    {
+        Veu(new Color(0.03f, 0.05f, 0.10f, 0.78f));
+
+        float linha = tamanho * 1.5f;
+        float meio = (Screen.height * 0.5f) - (linha * 2.5f);
+
+        Escrever(Faixa(meio + (linha * 0.5f), grande.fontSize * 2f),
+                 "VOCÊ ESTÁ QUASE LÁ", grande, corDeDestaque);
+        Escrever(Faixa(meio + (linha * 1.9f), dica.fontSize * 2f),
+                 "mas existem mais perigos pela frente", dica, Color.white);
+
+        DesenharQuemEspera(tamanho, meio + (linha * 4.4f), Horda.numero + 1);
+
+        Escrever(Faixa(meio + (linha * 7.3f), dica.fontSize * 2f),
+                 "aperte qualquer tecla para continuar", dica, new Color(0.8f, 0.83f, 0.9f));
     }
 
     // A vitoria. O veu e dourado, a cor da moeda: e o dinheiro guardado que vira

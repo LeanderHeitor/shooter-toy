@@ -293,6 +293,8 @@ public class Horda : MonoBehaviour
         cerco.Abrir();
         AbrirIntervalo();
 
+        if (numero == hordaDaVitoria / 2) GameManager.ChegouNaMetade();
+
         // O prisioneiro fica na metade do caminho ate onde a proxima horda comeca.
         // Assim ele esta no caminho natural do jogador: quem quer comprar para nele,
         // quem nao quer passa reto e ja dispara a horda seguinte. A conta mora aqui
