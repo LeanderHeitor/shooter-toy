@@ -12,15 +12,31 @@ public class Spawner : MonoBehaviour
     public GameObject knifePrefab;   // rebelde da faca
     public GameObject riflePrefab;   // rebelde do fuzil
 
-    // ----- RITMO -----
-    public float intervaloInicial = 2.5f;
-    public float intervaloFinal = 0.6f;
-    public float tempoAteORitmoMaximo = 150f;  // 2min30
-    public int maxVivos = 6;
+    // ----- ESCADA DE DIFICULDADE -----
+    // Tudo aqui sobe com o NUMERO DA HORDA, e nao com o relogio. Antes subia com o
+    // tempo de jogo, e na horda 3 o jogo ja estava no ritmo maximo: a horda 1, que
+    // devia ensinar, ja era a mais apertada. Agora cada horda e um degrau, e o
+    // jogador sabe que passar de uma e ganhar direito a uma mais dificil.
+    public int hordaDoRitmoMaximo = 9;       // a partir dela, tudo no teto
+    public float intervaloDaPrimeira = 2.5f;
+    public float intervaloDoTeto = 0.6f;
+
+    // Quantos podem estar vivos ao mesmo tempo. Com 3 na horda 1 da para aprender a
+    // buscar moeda no meio do perigo sem morrer em dez segundos.
+    public int vivosNaPrimeira = 3;
+    public int vivosNoTeto = 6;               // sobe 1 por horda ate aqui
 
     // ----- MISTURA -----
-    public float segundosParaOFuzileiroEntrar = 10f;
-    public float segundosParaMetadeFuzileiro = 150f;
+    // O fuzileiro so aparece da horda 3 em diante: as duas primeiras sao so faca,
+    // para o jogador entender o pulo e o tiro antes de ter que desviar de bala.
+    public int hordaDoFuzileiro = 3;
+    public float chanceDoFuzileiroAoEntrar = 0.25f;
+    public float chanceDoFuzileiroNoTeto = 0.5f;
+
+    // Pelas costas desde a primeira horda, mas pouco: com o cerco fechado, nascer
+    // atras e o que impede o jogador de ficar parado atirando para um lado so.
+    public float chancePelasCostasNaPrimeira = 0.15f;
+    public float chancePelasCostasNoTeto = 0.5f;
 
     // Ritmo da Horda de Resistencia. Ali o inimigo nao e um lote a ser limpo, e sim
     // uma torneira aberta: e o ritmo que faz o jogador correr, nao a quantidade.
@@ -34,7 +50,6 @@ public class Spawner : MonoBehaviour
     public float intervaloMinimoDaResistencia = 0.35f;
 
     // ----- ONDE NASCE -----
-    public float segundosParaNascerPelasCostas = 60f;
     public float distanciaDoSpawn = 12f;   // um pouco fora da tela
     public float alturaDoChao = -3.75f;
 
@@ -101,7 +116,7 @@ public class Spawner : MonoBehaviour
         proximoSpawn = Time.time + IntervaloAgora();
 
         // Teto de inimigos vivos ao mesmo tempo.
-        if (GameObject.FindGameObjectsWithTag("Enemy").Length >= maxVivos) return;
+        if (GameObject.FindGameObjectsWithTag("Enemy").Length >= MaxVivosAgora()) return;
 
         Nascer();
 
@@ -130,28 +145,35 @@ public class Spawner : MonoBehaviour
         return outroEMaisLonge ? outro : preferido;
     }
 
-    // O tempo entre um inimigo e outro vai encurtando ate o minimo.
-    // A Horda de Resistencia ignora essa curva e impoe o proprio ritmo.
+    // Onde esta horda fica na escada: 0 na primeira, 1 do teto em diante.
+    float Degrau()
+    {
+        return Mathf.Clamp01((Horda.numero - 1) / (float)(hordaDoRitmoMaximo - 1));
+    }
+
+    // O tempo entre um inimigo e outro encurta a cada horda ate o teto.
+    // A Horda de Resistencia ignora essa escada e impoe o proprio ritmo.
     float IntervaloAgora()
     {
         if (intervaloForcado > 0f) return intervaloForcado;
+        return Mathf.Lerp(intervaloDaPrimeira, intervaloDoTeto, Degrau());
+    }
 
-        float t = Mathf.Clamp01(Time.timeSinceLevelLoad / tempoAteORitmoMaximo);
-        return Mathf.Lerp(intervaloInicial, intervaloFinal, t);
+    int MaxVivosAgora()
+    {
+        return Mathf.Min(vivosNoTeto, vivosNaPrimeira + (Horda.numero - 1));
     }
 
     void Nascer()
     {
-        float tempo = Time.timeSinceLevelLoad;
-
         // ----- QUAL TIPO -----
-        // O primeiro spawn com vaga a partir de 10s apresenta o fuzileiro.
-        // Depois, a chance cresce de 25% para 50% ate 2min30.
+        // O primeiro spawn com vaga na horda do fuzileiro apresenta ele. Depois, a
+        // chance cresce ate o teto junto com o resto da escada.
         GameObject prefab = knifePrefab;
-        if (riflePrefab != null && tempo >= segundosParaOFuzileiroEntrar)
+        if (riflePrefab != null && Horda.numero >= hordaDoFuzileiro)
         {
-            float t = Mathf.InverseLerp(segundosParaOFuzileiroEntrar, segundosParaMetadeFuzileiro, tempo);
-            if (!fuzileiroApresentado || Random.value < Mathf.Lerp(0.25f, 0.5f, t))
+            float t = Mathf.InverseLerp(hordaDoFuzileiro, hordaDoRitmoMaximo, Horda.numero);
+            if (!fuzileiroApresentado || Random.value < Mathf.Lerp(chanceDoFuzileiroAoEntrar, chanceDoFuzileiroNoTeto, t))
             {
                 prefab = riflePrefab;
                 fuzileiroApresentado = true;
@@ -161,10 +183,10 @@ public class Spawner : MonoBehaviour
         if (prefab == null) return;
 
         // ----- DE QUE LADO -----
-        // Ate 60s so aparece pela frente. Depois disso tambem pelas costas.
         float ladoDaFrente = player.isFacingRight ? 1f : -1f;
         float lado = ladoDaFrente;
-        if (tempo > segundosParaNascerPelasCostas && Random.value < 0.35f)
+        float chancePelasCostas = Mathf.Lerp(chancePelasCostasNaPrimeira, chancePelasCostasNoTeto, Degrau());
+        if (Random.value < chancePelasCostas)
         {
             lado = -ladoDaFrente;
         }
