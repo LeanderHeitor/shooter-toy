@@ -31,8 +31,13 @@ public class Granada : MonoBehaviour
 
     private CinemachineImpulseSource tremor;
 
+    // Para o rocket e o colete tremerem a mesma camera sem montar outra fonte de
+    // tremor: a camera tem um ouvinte so, e ele ja esta ligado a esta.
+    private static Granada instancia;
+
     void Awake()
     {
+        instancia = this;
         // Static sobrevive ao recarregamento da cena: sem isto a partida nova podia
         // nascer com o clarao da anterior ainda aceso.
         claraoAte = -1f;
@@ -119,6 +124,13 @@ public class Granada : MonoBehaviour
 
         claraoAte = Time.time + duracaoDoClarao;
         if (tremor != null) tremor.GenerateImpulseWithForce(forcaDoTremor);
+    }
+
+    // Um tremor menor, pedido de fora. A granada continua sendo o maior da tela.
+    public static void Tremer(float forca)
+    {
+        if (instancia == null || instancia.tremor == null) return;
+        instancia.tremor.GenerateImpulseWithForce(forca);
     }
 
     // So quem esta dentro das paredes. Com o cerco aberto nao existe "dentro", entao

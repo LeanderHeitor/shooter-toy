@@ -45,8 +45,8 @@ public class Horda : MonoBehaviour
 
     // ----- COMECO DA PROXIMA -----
     // Com o cerco aberto, quem dispara a horda seguinte e o jogador andando para
-    // frente. E o unico momento do jogo em que ele escolhe a hora de apanhar, e essa
-    // pausa curta e o que vai virar a loja.
+    // frente. E o unico momento do jogo em que ele escolhe a hora de apanhar, e e
+    // nessa pausa que o prisioneiro aparece com a loja.
     public float avancoParaComecar = 7f;
 
     // Rede de seguranca: se o jogador ficar parado (ou so recuando), a horda comeca
@@ -64,6 +64,7 @@ public class Horda : MonoBehaviour
 
     private Spawner spawner;
     private Cerco cerco;
+    private Loja loja;
     private Transform jogador;
 
     // O placar de abates em que esta horda fecha. Guardar o ALVO, e nao quanto ja
@@ -96,6 +97,7 @@ public class Horda : MonoBehaviour
     void Start()
     {
         spawner = FindFirstObjectByType<Spawner>();
+        loja = FindFirstObjectByType<Loja>();
 
         GameObject go = GameObject.FindGameObjectWithTag("Player");
         if (go != null) jogador = go.transform;
@@ -168,6 +170,11 @@ public class Horda : MonoBehaviour
 
         emCombate = true;
 
+        // O prisioneiro vai embora quando a horda comeca: a loja nunca abre com
+        // inimigo vivo.
+        if (loja != null) loja.DispensarPrisioneiro();
+
+
         if (tipo == TipoDeHorda.Quota)
         {
             hordasDeQuota = hordasDeQuota + 1;
@@ -205,6 +212,16 @@ public class Horda : MonoBehaviour
 
         cerco.Abrir();
         AbrirIntervalo();
+
+        // O prisioneiro fica na metade do caminho ate onde a proxima horda comeca.
+        // Assim ele esta no caminho natural do jogador: quem quer comprar para nele,
+        // quem nao quer passa reto e ja dispara a horda seguinte. A conta mora aqui
+        // porque e a Horda quem sabe onde a proxima comeca.
+        if (loja != null && jogador != null)
+        {
+            float x = jogador.position.x + (avancoParaComecar * 0.5f);
+            loja.ChamarPrisioneiro(new Vector3(x, cerco.alturaDoChao, 0f));
+        }
     }
 
     void AbrirIntervalo()

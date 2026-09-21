@@ -17,6 +17,14 @@ public class BulletScript : MonoBehaviour
     // Depois de andar isto tudo sem acertar ninguem, a bala se destroi sozinha.
     public float alcance = 25f;
 
+    // Subida por segundo. Zero na pistola; e o que abre o leque da shotgun, com um
+    // chumbo subindo, um reto e um descendo.
+    public float velocidadeVertical = 0f;
+
+    // Maior que zero, a bala e um rocket: no primeiro acerto ela explode e mata todo
+    // inimigo dentro deste raio, e nao so quem ela tocou.
+    public float raioDaExplosao = 0f;
+
     // Onde a bala nasceu, pra medir o alcance (o mundo e infinito, entao nao da pra usar x fixo).
     private float origemX;
 
@@ -28,7 +36,7 @@ public class BulletScript : MonoBehaviour
     void Update()
     {
         // Anda pra frente na direcao escolhida (direita ou esquerda).
-        transform.position += Vector3.right * direction * moveSpeed * Time.deltaTime;
+        transform.position += ((Vector3.right * direction * moveSpeed) + (Vector3.up * velocidadeVertical)) * Time.deltaTime;
 
         // Andou demais? Se destroi, pra nao ficar viva pra sempre.
         if (Mathf.Abs(transform.position.x - origemX) > alcance)
@@ -52,8 +60,33 @@ public class BulletScript : MonoBehaviour
             // Bala do player: so mata inimigo (os dois tipos tem o EnemyDeath).
             EnemyDeath inimigo = other.GetComponent<EnemyDeath>();
             if (inimigo == null) return;
-            inimigo.Morrer();
+            // Dois chumbos entrando no mesmo inimigo no mesmo quadro: o segundo
+            // passa reto em vez de sumir num corpo que ja esta caindo.
+            if (inimigo.isMorto) return;
+
+            if (raioDaExplosao > 0f) Explodir();
+            else inimigo.Morrer();
         }
         Destroy(gameObject);
+    }
+
+    // Mata todo mundo em volta do ponto do acerto. Diferente da granada, paga moeda
+    // normalmente: o rocket ja foi pago na loja, tiro por tiro.
+    void Explodir()
+    {
+        Vector3 centro = transform.position;
+
+        GameObject[] vivos = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int i = 0; i < vivos.Length; i++)
+        {
+            // So a distancia no chao: um inimigo pulando em cima do outro continua
+            // "perto", e medir em duas dimensoes deixaria o raio injusto nessa hora.
+            if (Mathf.Abs(vivos[i].transform.position.x - centro.x) > raioDaExplosao) continue;
+
+            EnemyDeath ed = vivos[i].GetComponent<EnemyDeath>();
+            if (ed != null) ed.Morrer();
+        }
+
+        Explosao.Criar(centro, raioDaExplosao);
     }
 }

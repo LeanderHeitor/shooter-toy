@@ -8,12 +8,13 @@ using UnityEngine.SceneManagement;
 // numa cena so - o menu nao e outra cena, e o mesmo mundo com o tempo parado e um
 // texto por cima. E por isso que trocar de tela aqui e instantaneo.
 //
-// Jogando e o UNICO estado em que o tempo anda. Os outros tres congelam o mundo.
+// Jogando e o UNICO estado em que o tempo anda. Os outros congelam o mundo.
 public enum Estado
 {
     Menu,       // antes de comecar. O mundo ja existe atras do texto, so nao anda
     Jogando,    // a partida em si
     Pausado,    // congelado a pedido do jogador, com a partida intacta
+    Loja,       // congelado enquanto o jogador compra do prisioneiro, entre hordas
     FimDeJogo   // congelado porque o jogador morreu
 }
 
@@ -25,6 +26,12 @@ public class GameManager : MonoBehaviour
 {
     // ----- ESTADO -----
     public static Estado estado = Estado.Menu;
+
+    // Em que quadro o estado mudou pela ultima vez. Duas telas escutam o Esc (a
+    // pausa aqui, a saida da loja na Loja), e a ordem em que a Unity chama os Update
+    // nao e garantida: sem esta trava, o Esc que fecha a loja podia ser lido de novo
+    // no mesmo quadro como "pausar", e o jogador saia da loja direto para a pausa.
+    public static int quadroDaUltimaTroca = -1;
 
     // ----- PLACAR -----
     public static int abates = 0;
@@ -62,6 +69,13 @@ public class GameManager : MonoBehaviour
         janela = janelaDaSequencia;
         passoDoBonus = abatesPorBonus;
 
+        // A morte leva tudo, nao so as moedas: arma, municao e coletes tambem.
+        Arsenal.Zerar();
+
+        // A loja e montada em codigo pelo mesmo motivo do Cerco na Horda: um
+        // componente a menos para esquecer de arrastar na cena.
+        if (GetComponent<Loja>() == null) gameObject.AddComponent<Loja>();
+
         // A cena nasce no menu, congelada. Isso tambem serve de rede de seguranca:
         // se a partida anterior acabou com o tempo parado, o IrPara conserta.
         IrPara(Estado.Menu);
@@ -79,6 +93,9 @@ public class GameManager : MonoBehaviour
         // Cada estado escuta so as teclas que fazem sentido nele. Um switch em vez
         // de varios "if" soltos: assim e impossivel duas telas responderem a mesma
         // tecla ao mesmo tempo, que era o risco do bool isFimDeJogo antigo.
+        // Uma tecla, uma troca de tela. Ver quadroDaUltimaTroca.
+        if (Time.frameCount == quadroDaUltimaTroca) return;
+
         switch (estado)
         {
             case Estado.Menu:
@@ -91,6 +108,11 @@ public class GameManager : MonoBehaviour
 
             case Estado.Pausado:
                 if (ApertouPausa()) IrPara(Estado.Jogando);
+                break;
+
+            case Estado.Loja:
+                // Quem entra e sai da loja e a propria Loja: e ela que sabe se o
+                // jogador esta perto do prisioneiro, e ela que le as teclas de compra.
                 break;
 
             case Estado.FimDeJogo:
@@ -107,6 +129,7 @@ public class GameManager : MonoBehaviour
     public static void IrPara(Estado novo)
     {
         estado = novo;
+        quadroDaUltimaTroca = Time.frameCount;
         Time.timeScale = (novo == Estado.Jogando) ? 1f : 0f;
     }
 

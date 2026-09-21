@@ -13,6 +13,9 @@ daqui.
 | `...Playable Characters - Tarma Roving.png` | Player: Idle, Run, Shoot, Death, Jump |
 | `...Enemies & Bosses - Rebel Soldier.png` | Inimigo melee (Run com faca) e a morte compartilhada |
 | `...Enemies & Bosses - Rebel Soldier (Rifle).png` | Inimigo atirador: Walk e Shoot |
+| `...Non-Playable Characters - P.O.W.s _ Helpful NPCs.png` e `Metal Slug - POWs (Kodama).gif` | Prisioneiro da loja: amarrado (POW_Tied) e solto (POW_Idle) |
+| `...Miscellaneous - Items.png` | Moeda girando (Coin_Spin) |
+| `...Miscellaneous - Blood.gif` | Sangue do abate (Blood_Spray) |
 
 **Credito exigido pelo proprio pacote**, conforme escrito dentro da folha do Rifle Soldier:
 

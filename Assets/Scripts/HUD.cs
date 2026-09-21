@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // HUD.cs
-// Desenha TODAS as telas do jogo: menu de entrada, placar, pausa e fim de jogo.
+// Desenha TODAS as telas do jogo: menu de entrada, placar, pausa, loja e fim de jogo.
 // Nao existe Canvas nem cena separada - e tudo OnGUI por cima do mesmo mundo, e
 // quem decide qual tela aparece e o GameManager.estado.
 //
@@ -141,6 +141,7 @@ public class HUD : MonoBehaviour
         {
             case Estado.Menu:      DesenharMenu(tamanho);      break;
             case Estado.Pausado:   DesenharPausa(tamanho);     break;
+            case Estado.Loja:      DesenharLoja(tamanho);      break;
             case Estado.FimDeJogo: DesenharFimDeJogo(tamanho); break;
         }
 
@@ -149,8 +150,110 @@ public class HUD : MonoBehaviour
         if (GameManager.estado != Estado.Menu)
         {
             DesenharPlacar(tamanho);
-            DesenharHorda(tamanho);
+            DesenharArsenal(tamanho);
+            if (GameManager.estado != Estado.Loja) DesenharHorda(tamanho);
         }
+
+        if (GameManager.estado == Estado.Jogando) DesenharBalcao(tamanho);
+    }
+
+    // O canto superior direito: o que o jogador carrega. Fica longe das moedas de
+    // proposito - moeda e o que ele TEM para gastar, isto e o que ja gastou.
+    void DesenharArsenal(int tamanho)
+    {
+        float linha = tamanho * 1.35f;
+        float margem = tamanho * 0.6f;
+
+        GUIStyle direita = new GUIStyle(placar);
+        direita.alignment = TextAnchor.UpperRight;
+        Rect Linha(int n) => new Rect(0f, margem + (linha * n), Screen.width - margem, linha);
+
+        // A municao aparece sempre junto do nome: e ela que diz quando a arma vai
+        // voltar a ser a pistola, e o jogador precisa ver isso chegando.
+        string arma = (Arsenal.arma == TipoDeArma.Pistola)
+            ? "Pistola"
+            : Arsenal.Nome(Arsenal.arma) + ": " + Arsenal.municao;
+        Color corDaArma = (Arsenal.arma != TipoDeArma.Pistola && Arsenal.municao <= 5)
+            ? new Color(1f, 0.4f, 0.35f) : Color.white;
+        Escrever(Linha(0), arma, direita, corDaArma);
+
+        if (Arsenal.coletes > 0)
+        {
+            string texto = (Arsenal.coletes == 1) ? "1 colete" : Arsenal.coletes + " coletes";
+            Escrever(Linha(1), texto, direita, new Color(0.55f, 0.8f, 1f));
+        }
+    }
+
+    // O "E" em cima da cabeca do prisioneiro, so quando o jogador esta perto o
+    // bastante para ele funcionar. Aparecer de longe ensinaria que o E funciona de
+    // qualquer lugar.
+    void DesenharBalcao(int tamanho)
+    {
+        if (Loja.jogadorNoBalcao == false || Loja.prisioneiro == null) return;
+
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        // Um pouco acima da cabeca dele. O OnGUI conta o Y de cima para baixo e a
+        // camera de baixo para cima, dai a inversao.
+        Vector3 tela = cam.WorldToScreenPoint(Loja.prisioneiro.transform.position + new Vector3(0f, 1.6f, 0f));
+        float y = Screen.height - tela.y;
+
+        Rect onde = new Rect(tela.x - Screen.width * 0.5f, y - tamanho, Screen.width, tamanho * 2f);
+        Escrever(onde, "E  loja", dica, corDaMoeda);
+    }
+
+    // A tela da loja. O mundo fica congelado atras, como na pausa, e o placar
+    // continua no canto: e o saldo que o jogador olha antes de cada compra.
+    void DesenharLoja(int tamanho)
+    {
+        Veu(new Color(0.08f, 0.06f, 0.02f, 0.80f));
+
+        Loja loja = Loja.atual;
+        if (loja == null) return;
+
+        float linha = tamanho * 1.6f;
+        float topo = Screen.height * 0.26f;
+
+        Escrever(Faixa(topo, grande.fontSize * 2f), "LOJA", grande, corDeDestaque);
+
+        System.Collections.Generic.List<ItemDaLoja> itens = loja.Itens();
+        float esquerda = Screen.width * 0.18f;
+        float largura = Screen.width * 0.64f;
+
+        GUIStyle direita = new GUIStyle(placar);
+        direita.alignment = TextAnchor.UpperRight;
+        GUIStyle detalhe = new GUIStyle(placar);
+        detalhe.fontStyle = FontStyle.Normal;
+        detalhe.fontSize = Mathf.RoundToInt(tamanho * 0.7f);
+
+        for (int i = 0; i < itens.Count; i++)
+        {
+            ItemDaLoja item = itens[i];
+            float y = topo + (linha * 1.6f) + (linha * 1.35f * i);
+
+            // Cinza quando nao da para comprar: o jogador ve de relance o que o
+            // saldo alcanca, sem fazer conta. E a ganancia desenhada na tela.
+            bool podePagar = GameManager.moedas >= item.preco && item.indisponivel == false;
+            Color cor = podePagar ? Color.white : new Color(0.55f, 0.55f, 0.55f);
+
+            Escrever(new Rect(esquerda, y, largura, linha), (i + 1) + "   " + item.nome, placar, cor);
+            Escrever(new Rect(esquerda, y, largura, linha), item.preco + " moedas", direita,
+                     podePagar ? corDaMoeda : cor);
+            Escrever(new Rect(esquerda + tamanho * 1.6f, y + tamanho * 1.05f, largura, linha),
+                     item.detalhe, detalhe, new Color(0.75f, 0.75f, 0.75f));
+        }
+
+        float rodape = topo + (linha * 1.6f) + (linha * 1.35f * itens.Count) + linha * 0.6f;
+
+        if (Time.unscaledTime < Loja.avisoAte)
+        {
+            Color corDoAviso = Loja.avisoEhErro ? new Color(1f, 0.4f, 0.35f) : new Color(0.65f, 0.95f, 0.7f);
+            Escrever(Faixa(rodape, dica.fontSize * 2f), Loja.aviso, dica, corDoAviso);
+        }
+
+        Escrever(Faixa(rodape + linha * 1.1f, dica.fontSize * 2f),
+                 "1-4 comprar   ·   E ou Esc sair", dica, new Color(0.8f, 0.8f, 0.75f));
     }
 
     // O topo da tela, no centro. A horda fica aqui, e nao no canto com o resto do
@@ -168,7 +271,7 @@ public class HUD : MonoBehaviour
             texto = (Horda.numero == 0)
                 ? "siga em frente para a primeira horda"
                 : "Horda " + Horda.numero + " limpa   ·   +" + Horda.ultimoBonus +
-                  " moedas   ·   siga em frente";
+                  " moedas   ·   o prisioneiro tem uma loja";
             cor = new Color(0.65f, 0.95f, 0.7f);
         }
         else if (Horda.tipo == TipoDeHorda.Resistencia)
@@ -277,7 +380,7 @@ public class HUD : MonoBehaviour
 
         // Os controles no rodape: e a unica tela onde o jogador tem tempo de ler.
         Escrever(Faixa(Screen.height - (linha * 1.1f), dica.fontSize * 2f),
-                 "A D mover   ·   ESPAÇO pular   ·   J atirar   ·   K granada   ·   P pausa",
+                 "A D mover   ·   ESPAÇO pular   ·   J atirar   ·   K granada   ·   E loja   ·   P pausa",
                  dica, new Color(0.75f, 0.78f, 0.85f));
     }
 

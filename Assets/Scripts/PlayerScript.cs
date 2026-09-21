@@ -35,6 +35,30 @@ public class PlayerScript : MonoBehaviour
     public Transform firePoint;          // ponto de onde a bala sai (um filho do player)
     public float tirosPorSegundo = 4f;   // limite de cadencia, mesmo apertando muito rapido
 
+    // ----- ARMAS COMPRADAS -----
+    // Nenhuma mata mais: todo inimigo morre com um acerto. Os numeros abaixo mudam
+    // so a FORMA do tiro - quantos inimigos um disparo alcanca e com que rapidez.
+
+    // Shotgun: tres chumbos, um subindo, um reto e um descendo. Alcance curto de
+    // proposito: e a arma de quem aceita chegar perto, e perto e onde a moeda esta.
+    public float aberturaDoLeque = 2.2f;     // subida por segundo dos chumbos de fora
+    public float alcanceDaShotgun = 9f;
+
+    // Metralhadora: a unica arma em que segurar o botao repete o tiro.
+    public float tirosPorSegundoDaMetralhadora = 10f;
+    public float tremidaDaMetralhadora = 0.5f;   // o tiro sai um pouco torto
+
+    // Rocket: lento de sair e lento de voar, mas leva todo mundo em volta do acerto.
+    public float tirosPorSegundoDoRocket = 1.5f;
+    public float velocidadeDoRocket = 9f;
+    public float raioDoRocket = 2.5f;
+
+    // ----- COLETE -----
+    // Quando o colete gasta o golpe, o jogador fica intocavel por este tempo. Sem
+    // isto o rebelde da faca, que continua encostado, mataria no quadro seguinte e o
+    // colete teria servido para nada.
+    public float invencivelDepoisDoColete = 1.2f;
+
     // ----- MORTE E RESPAWN -----
     public float tempoInvencivel = 1.5f;   // piscando e sem tomar dano logo que a partida comeca
     public float tempoAteOFimDeJogo = 1.45f; // a morte agora tem 22 quadros (1,375s); a tela so entra depois
@@ -116,13 +140,21 @@ public class PlayerScript : MonoBehaviour
             isGrounded = false;
         }
 
-        // Um tiro por toque em J ou no mouse. Segurar nao cria novas balas.
+        // Um tiro por toque em J ou no mouse: segurar nao cria novas balas. A
+        // metralhadora e a excecao que o dinheiro compra - com ela, segurar atira.
         bool apertouTiro = kb.jKey.wasPressedThisFrame ||
                           (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
-        if (apertouTiro && Time.time >= proximoTiro)
+        bool segurandoTiro = kb.jKey.isPressed ||
+                            (Mouse.current != null && Mouse.current.leftButton.isPressed);
+
+        bool querAtirar = (Arsenal.arma == TipoDeArma.Metralhadora) ? segurandoTiro : apertouTiro;
+        if (querAtirar && Time.time >= proximoTiro)
         {
+            // A cadencia e lida ANTES do tiro: o ultimo tiro de uma arma devolve a
+            // pistola, e o intervalo dele tem que ser o da arma que o disparou.
+            float cadencia = CadenciaDaArma();
             Atirar();
-            proximoTiro = Time.time + (1f / tirosPorSegundo);
+            proximoTiro = Time.time + (1f / cadencia);
         }
 
         // ----- AVISA O ANIMATOR -----
@@ -145,7 +177,17 @@ public class PlayerScript : MonoBehaviour
                                  Mathf.FloorToInt(Time.time * 10f) % 2 == 0;
     }
 
-    // Cria uma bala no firePoint e manda ela pra direcao que o player esta virado.
+    float CadenciaDaArma()
+    {
+        switch (Arsenal.arma)
+        {
+            case TipoDeArma.Metralhadora: return tirosPorSegundoDaMetralhadora;
+            case TipoDeArma.Rocket:       return tirosPorSegundoDoRocket;
+            default:                      return tirosPorSegundo;
+        }
+    }
+
+    // Dispara conforme a arma que o jogador carrega, e gasta um tiro da municao.
     void Atirar()
     {
         if (bulletPrefab == null || firePoint == null) return;
@@ -154,9 +196,48 @@ public class PlayerScript : MonoBehaviour
         if (animator != null && isGrounded && myRigidbody.linearVelocity.x == 0f)
             animator.Play("Shoot", 0, 0f);
 
+        switch (Arsenal.arma)
+        {
+            case TipoDeArma.Shotgun:
+                // Um toque, tres chumbos: e o unico jeito do jogo de acertar tres
+                // rebeldes com um disparo so, desde que eles estejam perto.
+                CriarBala(-aberturaDoLeque).alcance = alcanceDaShotgun;
+                CriarBala(0f).alcance = alcanceDaShotgun;
+                CriarBala(aberturaDoLeque).alcance = alcanceDaShotgun;
+                break;
+
+            case TipoDeArma.Metralhadora:
+                CriarBala(Random.Range(-tremidaDaMetralhadora, tremidaDaMetralhadora));
+                break;
+
+            case TipoDeArma.Rocket:
+                BulletScript rocket = CriarBala(0f);
+                rocket.moveSpeed = velocidadeDoRocket;
+                rocket.raioDaExplosao = raioDoRocket;
+
+                // Maior e laranja: o jogador precisa ver no ar que aquele tiro e
+                // diferente, antes de ver o que ele faz.
+                rocket.transform.localScale = new Vector3(0.6f, 0.28f, 1f);
+                SpriteRenderer sr = rocket.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.color = new Color(1f, 0.45f, 0.15f);
+                break;
+
+            default:
+                CriarBala(0f);
+                break;
+        }
+
+        Arsenal.GastarTiro();
+    }
+
+    // Cria uma bala no firePoint e manda ela pra direcao que o player esta virado.
+    BulletScript CriarBala(float subida)
+    {
         GameObject bala = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
         BulletScript bs = bala.GetComponent<BulletScript>();
-        if (bs != null) bs.direction = isFacingRight ? 1f : -1f;
+        bs.direction = isFacingRight ? 1f : -1f;
+        bs.velocidadeVertical = subida;
+        return bs;
     }
 
     // Chamado pelos inimigos (encostao da faca) e pela bala inimiga.
@@ -164,6 +245,18 @@ public class PlayerScript : MonoBehaviour
     {
         if (isMorto == true) return;
         if (Time.time < invencivelAte) return; // invencivel logo depois do respawn
+
+        // O colete gasta o golpe no lugar do jogador. Ele continua morrendo com um
+        // acerto so - o colete e que levou este. O pisca da invencibilidade e o
+        // tremor sao o recibo: sem eles, o jogador nem percebe que acabou de perder
+        // o colete e acha que o tiro errou.
+        if (Arsenal.AbsorverGolpe())
+        {
+            invencivelAte = Time.time + invencivelDepoisDoColete;
+            Granada.Tremer(0.3f);
+            return;
+        }
+
 
         isMorto = true;
 
