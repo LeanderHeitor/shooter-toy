@@ -135,7 +135,12 @@ public class HUD : MonoBehaviour
         // Desenha texto sem herdar o destaque de mouse dos labels do tema da Unity.
         if (Event.current.type != EventType.Repaint) return;
 
-        int tamanho = Mathf.Max(14, Screen.height / divisorDaLetra);
+        // O menor dos dois: pela altura, como sempre, e pela largura como se a tela
+        // fosse 16:9. Numa janela mais estreita que isso a letra encolhe junto, senao
+        // as linhas longas do topo saem pelas bordas.
+        int pelaAltura = Screen.height / divisorDaLetra;
+        int pelaLargura = Mathf.RoundToInt(Screen.width * 9f / 16f) / divisorDaLetra;
+        int tamanho = Mathf.Max(14, Mathf.Min(pelaAltura, pelaLargura));
         PrepararEstilos(tamanho);
 
         // O clarao vem antes de tudo, por baixo dos textos: o placar continua legivel
@@ -287,14 +292,13 @@ public class HUD : MonoBehaviour
             // momento em que o jogo diz ao jogador o que fazer para continuar.
             texto = (Horda.numero == 0)
                 ? "siga em frente para a primeira horda"
-                : "Horda " + Horda.numero + " limpa   ·   +" + Horda.ultimoBonus +
-                  " moedas   ·   o prisioneiro tem uma loja";
-
-            // O primeiro chefe caiu: o jogador precisa saber que o jogo tem fim, e
-            // que ja andou metade dele. Um objetivo visivel puxa mais que um infinito.
-            if (Horda.numero == Horda.hordaDaVitoria / 2)
-                texto = "METADE DO CAMINHO!   ·   " + texto;
+                : "Horda " + Horda.numero + " limpa   ·   +" + Horda.ultimoBonus + " moedas";
             cor = new Color(0.65f, 0.95f, 0.7f);
+
+            // O aviso da loja vai numa segunda linha, menor. Numa linha so a frase
+            // passava de 1200 pixels e encostava no placar e na arma dos lados.
+            if (Horda.numero > 0)
+                EscreverNoTopo(tamanho, 1, "o prisioneiro tem uma loja", cor);
         }
         else if (Horda.tipo == TipoDeHorda.Resistencia && Chefe.atual != null)
         {
@@ -315,7 +319,27 @@ public class HUD : MonoBehaviour
             cor = Color.white;
         }
 
-        Escrever(Faixa(tamanho * 1.1f, dica.fontSize * 2f), texto, dica, cor);
+        EscreverNoTopo(tamanho, 0, texto, cor);
+    }
+
+    // Uma linha no centro do topo, entre o placar da esquerda e a arma da direita.
+    // A linha 0 fica na altura do "Abates", para nada encostar na borda de cima. Se
+    // o texto nao couber no meio, a letra encolhe ate caber: e melhor ler menor do
+    // que ler pela metade.
+    void EscreverNoTopo(int tamanho, int qualLinha, string texto, Color cor)
+    {
+        float margem = tamanho * 0.6f;
+        float linha = tamanho * 1.35f;
+        float centro = margem + (linha * 0.5f) + (linha * qualLinha);
+
+        GUIStyle estilo = new GUIStyle(dica);
+        if (qualLinha > 0) estilo.fontSize = Mathf.RoundToInt(dica.fontSize * 0.8f);
+
+        float cabe = Screen.width - (tamanho * 20f);
+        while (estilo.fontSize > 10 && estilo.CalcSize(new GUIContent(texto)).x > cabe)
+            estilo.fontSize = estilo.fontSize - 1;
+
+        Escrever(Faixa(centro, estilo.fontSize * 2f), texto, estilo, cor);
     }
 
     // ----- BARRA DO CHEFE -----
@@ -363,12 +387,12 @@ public class HUD : MonoBehaviour
             ? c.nome + " derrotado!"
             : "Horda " + Horda.numero + "   ·   " + c.nome;
         Color corDoTitulo = c.EstaMorto() ? corDeDestaque : new Color(1f, 0.45f, 0.35f);
-        Escrever(Faixa(tamanho * 1.1f, dica.fontSize * 2f), titulo, dica, corDoTitulo);
+        EscreverNoTopo(tamanho, 0, titulo, corDoTitulo);
 
         float largura = Screen.width * 0.55f;
         float altura = Mathf.Max(10f, tamanho * 0.7f);
         float x = (Screen.width - largura) * 0.5f;
-        float y = tamanho * 2.2f;
+        float y = tamanho * 2.2f + tamanho * 0.3f;
         float borda = Mathf.Max(2f, tamanho * 0.08f);
 
         Retangulo(new Rect(x - borda, y - borda, largura + (borda * 2f), altura + (borda * 2f)), Color.black);
