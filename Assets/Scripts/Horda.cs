@@ -16,10 +16,10 @@ public enum TipoDeHorda
 // dar ao jogo uma unidade de conquista - um lote com comeco, fim e pagamento - e e
 // esse fim que abre o cerco e da acesso a loja.
 //
-// De cinco em cinco a regra troca: em vez de pedir abates, a horda pede que o
-// jogador fique vivo. A troca existe para que a arma comprada na loja encontre, de
-// vez em quando, um problema que ela sozinha nao resolve. Quando o relogio zera,
-// entra um chefe, e a horda so acaba quando ele cai.
+// A quinta e a ultima e troca a regra: em vez de pedir abates, a horda pede que o
+// jogador fique vivo. A troca existe para que a arma comprada na loja encontre um
+// problema que ela sozinha nao resolve. Quando o relogio zera, entra o chefe, e
+// derrubar ele vence a partida.
 public class Horda : MonoBehaviour
 {
     // ----- TAMANHO DAS HORDAS -----
@@ -39,15 +39,18 @@ public class Horda : MonoBehaviour
     // ----- CHEFES -----
     // Nomes dos prefabs em Assets/Resources, na ordem em que aparecem: a primeira
     // resistencia traz o primeiro, a segunda o segundo, e depois o ciclo recomeca.
+    // Como a partida acaba na horda 5, so o primeiro da lista chega a lutar.
     public string[] chefes = { "ChefeMinigun", "ChefeDiCokka" };
 
     // Quanto tempo depois da queda do chefe o cerco abre. E o tempo das explosoes:
     // abrir no mesmo quadro tiraria o palco da unica cena grande do jogo.
     public float esperaDepoisDoChefe = 1.6f;
 
-    // A horda cujo chefe, ao cair, vence a partida. E a segunda Horda de
-    // Resistencia: o Di-Cokka. Dois chefes, dois atos, e o jogo tem um fim.
-    public const int hordaDaVitoria = 10;
+    // A horda cujo chefe, ao cair, vence a partida. E a primeira Horda de
+    // Resistencia: quatro hordas de quota para juntar dinheiro e arma, e um chefe
+    // para gastar tudo. Era a 10, com dois chefes, mas o jogo ficava longo demais
+    // para um jogo casual: a partida inteira agora cabe em poucos minutos.
+    public const int hordaDaVitoria = 5;
 
     // ----- PAGAMENTO -----
     // O bonus de horda limpa e o unico dinheiro que NAO exige ir buscar. E a parte
@@ -313,7 +316,7 @@ public class Horda : MonoBehaviour
             segundosRestantes = segundosDeResistencia;
 
             // Sem limite de quantos nascem: aqui matar nao adianta nada, e essa e
-            // justamente a licao da horda. A 10 vem mais rapido que a 5.
+            // justamente a licao da horda.
             if (spawner != null) spawner.ComecarSemLimite(numero / resistenciaACada);
         }
     }
@@ -347,8 +350,6 @@ public class Horda : MonoBehaviour
 
         cerco.Abrir();
         AbrirIntervalo();
-
-        if (numero == hordaDaVitoria / 2) GameManager.ChegouNaMetade();
 
         // O prisioneiro fica na metade do caminho ate onde a proxima horda comeca.
         // Assim ele esta no caminho natural do jogador: quem quer comprar para nele,
@@ -412,8 +413,8 @@ public class Horda : MonoBehaviour
         return (n % resistenciaACada) == 0;
     }
 
-    // 8, 12, 16, 20 nas quatro primeiras; a quinta e de resistencia e nao tem quota;
-    // a sexta retoma em 24. O degrau e constante porque a conta olha para quantas
+    // 8, 12, 16, 20 nas quatro primeiras; a quinta e de resistencia e nao tem quota.
+    // O degrau e constante porque a conta olha para quantas
     // hordas de QUOTA ja aconteceram, e nao para o numero da horda.
     int QuotaDesta()
     {

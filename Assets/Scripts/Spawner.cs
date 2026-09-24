@@ -50,8 +50,8 @@ public class Spawner : MonoBehaviour
     // uma torneira aberta: e o ritmo que faz o jogador correr, nao a quantidade.
     public float intervaloDaResistencia = 0.7f;
 
-    // Cada Horda de Resistencia seguinte abre a torneira um pouco mais: a 10 nao pode
-    // ser a 5 de novo, senao o jogador que ja venceu uma vez sabe que vence sempre.
+    // Cada Horda de Resistencia seguinte abre a torneira um pouco mais: a segunda nao pode
+    // ser a primeira de novo, senao o jogador que ja venceu uma vez sabe que vence sempre.
     // O minimo existe porque abaixo dele o teto de vivos segura o ritmo de qualquer
     // jeito, e o numero no Inspector mentiria sobre o que acontece no jogo.
     public float encurtaACadaResistencia = 0.15f;
