@@ -35,6 +35,16 @@ public class PlayerScript : MonoBehaviour
     public Transform firePoint;          // ponto de onde a bala sai (um filho do player)
     public float tirosPorSegundo = 4f;   // limite de cadencia, mesmo apertando muito rapido
 
+    // A bala da pistola ia a 22 unidades, mais que o cerco inteiro: o rebelde morria
+    // antes de entrar na tela, e dava para passar a horda parado no meio virando de
+    // um lado para o outro. Com 8 ela nao chega ate a parede, entao quem nao anda
+    // precisa deixar o inimigo chegar perto. Ainda passa dos 6 do fuzileiro.
+    public float alcanceDaPistola = 8f;
+
+    // A metralhadora foi comprada: alcanca um pouco mais que a pistola, e esse e
+    // parte do que o dinheiro paga.
+    public float alcanceDaMetralhadora = 11f;
+
     // ----- ARMAS COMPRADAS -----
     // Nenhuma mata mais: todo inimigo morre com um acerto. Os numeros abaixo mudam
     // so a FORMA do tiro - quantos inimigos um disparo alcanca e com que rapidez.
@@ -42,7 +52,7 @@ public class PlayerScript : MonoBehaviour
     // Shotgun: tres chumbos, um subindo, um reto e um descendo. Alcance curto de
     // proposito: e a arma de quem aceita chegar perto, e perto e onde a moeda esta.
     public float aberturaDoLeque = 2.2f;     // subida por segundo dos chumbos de fora
-    public float alcanceDaShotgun = 9f;
+    public float alcanceDaShotgun = 6.5f;   // menor que o da pistola: e a arma de perto
 
     // Metralhadora: a unica arma em que segurar o botao repete o tiro.
     public float tirosPorSegundoDaMetralhadora = 10f;
@@ -207,7 +217,7 @@ public class PlayerScript : MonoBehaviour
                 break;
 
             case TipoDeArma.Metralhadora:
-                CriarBala(Random.Range(-tremidaDaMetralhadora, tremidaDaMetralhadora));
+                CriarBala(Random.Range(-tremidaDaMetralhadora, tremidaDaMetralhadora)).alcance = alcanceDaMetralhadora;
                 break;
 
             case TipoDeArma.Rocket:
@@ -223,7 +233,7 @@ public class PlayerScript : MonoBehaviour
                 break;
 
             default:
-                CriarBala(0f);
+                CriarBala(0f).alcance = alcanceDaPistola;
                 break;
         }
 

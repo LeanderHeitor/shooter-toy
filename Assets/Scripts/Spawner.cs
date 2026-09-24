@@ -17,13 +17,21 @@ public class Spawner : MonoBehaviour
     // tempo de jogo, e na horda 3 o jogo ja estava no ritmo maximo: a horda 1, que
     // devia ensinar, ja era a mais apertada. Agora cada horda e um degrau, e o
     // jogador sabe que passar de uma e ganhar direito a uma mais dificil.
-    public int hordaDoRitmoMaximo = 9;       // a partir dela, tudo no teto
-    public float intervaloDaPrimeira = 2.5f;
+    //
+    // O teto chega na ultima horda de quota, a que vem logo antes do chefe: e ali
+    // que o jogador precisa ja estar no limite. Vem da Horda, e nao do Inspector,
+    // para que encurtar ou alongar a partida leve a escada junto.
+    int hordaDoRitmoMaximo { get { return Mathf.Max(2, Horda.hordaDaVitoria - 1); } }
+    //
+    // A primeira ja comeca mais apertada que antes (era 2,5s e 3 vivos): no playtest
+    // dava para ficar parado no meio do cerco virando de um lado para o outro, porque
+    // um rebelde por vez nunca obrigava ninguem a se mexer.
+    public float intervaloDaPrimeira = 1.5f;
     public float intervaloDoTeto = 0.6f;
 
-    // Quantos podem estar vivos ao mesmo tempo. Com 3 na horda 1 da para aprender a
-    // buscar moeda no meio do perigo sem morrer em dez segundos.
-    public int vivosNaPrimeira = 3;
+    // Quantos podem estar vivos ao mesmo tempo. Com 4 na horda 1 ja aparece mais de
+    // um de cada lado, mas ainda da para buscar moeda sem morrer em dez segundos.
+    public int vivosNaPrimeira = 4;
     public int vivosNoTeto = 6;               // sobe 1 por horda ate aqui
 
     // ----- MISTURA -----
@@ -136,13 +144,24 @@ public class Spawner : MonoBehaviour
     // jogo inteiro se apoia em o jogador ver o perigo chegar.
     float OndeNascer(float xDoJogador, float ladoPreferido)
     {
-        float preferido = Cerco.ManterDentro(xDoJogador + (ladoPreferido * distanciaDoSpawn));
+        float preferido = PontoDeEntrada(xDoJogador, ladoPreferido);
         if (Mathf.Abs(preferido - xDoJogador) >= distanciaMinimaDoSpawn) return preferido;
 
-        float outro = Cerco.ManterDentro(xDoJogador - (ladoPreferido * distanciaDoSpawn));
+        float outro = PontoDeEntrada(xDoJogador, -ladoPreferido);
         bool outroEMaisLonge = Mathf.Abs(outro - xDoJogador) > Mathf.Abs(preferido - xDoJogador);
 
         return outroEMaisLonge ? outro : preferido;
+    }
+
+    // Com o cerco fechado o inimigo entra pela parede daquele lado, e nao a uma
+    // distancia fixa do jogador. Antes, com o jogador perto de uma parede, o rebelde
+    // do outro lado brotava no meio da tela, a vista, em vez de chegar do limite.
+    float PontoDeEntrada(float xDoJogador, float lado)
+    {
+        if (Cerco.fechado)
+            return Cerco.ManterDentro(lado > 0f ? Cerco.limiteDireito : Cerco.limiteEsquerdo);
+
+        return xDoJogador + (lado * distanciaDoSpawn);
     }
 
     // Onde esta horda fica na escada: 0 na primeira, 1 do teto em diante.

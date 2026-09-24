@@ -631,8 +631,10 @@ MonoBehaviour:
   bulletPrefab: {fileID: 720995738613322440, guid: 28289cd48aa95133bf38a4147f19cf55, type: 3}
   firePoint: {fileID: 2252632211582948258}
   tirosPorSegundo: 4
+  alcanceDaPistola: 8
+  alcanceDaMetralhadora: 11
   aberturaDoLeque: 2.2
-  alcanceDaShotgun: 9
+  alcanceDaShotgun: 6.5
   tirosPorSegundoDaMetralhadora: 10
   tremidaDaMetralhadora: 0.5
   tirosPorSegundoDoRocket: 1.5
@@ -3021,16 +3023,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Spawner
   knifePrefab: {fileID: 1973228012557604526, guid: c33441ff02472ec50702dc3a9efa4b48, type: 3}
   riflePrefab: {fileID: -6352198246980961106, guid: 6ac4e322a2881c7e27a9fbc08e985866, type: 3}
-  intervaloInicial: 2.5
-  intervaloFinal: 0.6
-  tempoAteORitmoMaximo: 150
-  maxVivos: 6
-  segundosParaOFuzileiroEntrar: 10
-  segundosParaMetadeFuzileiro: 150
+  intervaloDaPrimeira: 2.5
+  intervaloDoTeto: 0.6
+  vivosNaPrimeira: 3
+  vivosNoTeto: 6
+  hordaDoFuzileiro: 3
+  chanceDoFuzileiroAoEntrar: 0.25
+  chanceDoFuzileiroNoTeto: 0.5
+  chancePelasCostasNaPrimeira: 0.15
+  chancePelasCostasNoTeto: 0.5
   intervaloDaResistencia: 0.7
   encurtaACadaResistencia: 0.15
   intervaloMinimoDaResistencia: 0.35
-  segundosParaNascerPelasCostas: 60
   distanciaDoSpawn: 12
   alturaDoChao: -3.75
   distanciaMinimaDoSpawn: 5
