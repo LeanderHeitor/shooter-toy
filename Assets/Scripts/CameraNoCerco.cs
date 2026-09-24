@@ -25,6 +25,20 @@ public class CameraNoCerco : CinemachineExtension
     // unidades num quadro so. Parecia que o jogador tinha sido teleportado.
     public float tempoParaSoltar = 0.35f;
 
+    // O mesmo problema no sentido contrario: quando a horda comeca, a camera estava
+    // adiantada na frente do jogador (o look-ahead) e a trava a puxava de uma vez para
+    // o meio do cerco. O cenario inteiro saltava junto, e parecia teleporte de novo.
+    // Agora ela desliza ate a posicao presa durante este tempo, e so depois a trava
+    // fica exata. Nesse instante as paredes acabaram de surgir, entao ver um pedaco
+    // do lado de fora por meio segundo nao engana ninguem.
+    public float tempoParaPrender = 0.5f;
+
+    // Para perceber o quadro em que o cerco fechou, quando foi, e onde a camera
+    // estava naquele instante.
+    private bool estavaFechado = false;
+    private float fechouEm = -1f;
+    private float correcaoAoFechar = 0f;
+
     // Quanto a camera esta sendo empurrada em x neste momento, e a velocidade com
     // que esse empurrao esta sumindo (o SmoothDamp precisa guardar as duas).
     private float correcao = 0f;
@@ -56,9 +70,23 @@ public class CameraNoCerco : CinemachineExtension
                 ? (Cerco.limiteEsquerdo + Cerco.limiteDireito) * 0.5f
                 : Mathf.Clamp(posicao.x, minimo, maximo);
 
-            // Com o cerco fechado a trava e exata: a camera nunca mostra o lado de
-            // fora da parede, nem por um quadro.
-            correcao = presa - posicao.x;
+            // O cerco acabou de fechar: guarda de onde a camera parte.
+            if (estavaFechado == false)
+            {
+                fechouEm = Time.time;
+                correcaoAoFechar = correcao;
+            }
+
+            float alvo = presa - posicao.x;
+            float andamento = (tempoParaPrender > 0f) ? (Time.time - fechouEm) / tempoParaPrender : 1f;
+
+            // Mistura entre a correcao de antes e a trava, indo de 0 a 1 no tempo
+            // pedido. Nao da para usar um SmoothDamp aqui: o jogador continua andando,
+            // o alvo foge, e quando a janela acabasse sobraria um degrau - o mesmo
+            // salto de antes, so que meio segundo depois. A mistura chega em 1
+            // exatamente no fim, entao a passagem para a trava exata nao aparece.
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(andamento));
+            correcao = Mathf.Lerp(correcaoAoFechar, alvo, t);
             velocidadeDaCorrecao = 0f;
         }
         else if (deltaTime < 0f)
@@ -74,6 +102,8 @@ public class CameraNoCerco : CinemachineExtension
             correcao = Mathf.SmoothDamp(correcao, 0f, ref velocidadeDaCorrecao,
                                         tempoParaSoltar, Mathf.Infinity, deltaTime);
         }
+
+        estavaFechado = Cerco.fechado;
 
         posicao.x = posicao.x + correcao;
         state.RawPosition = posicao;

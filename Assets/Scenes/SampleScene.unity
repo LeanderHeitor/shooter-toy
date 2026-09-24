@@ -1941,6 +1941,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b589fdf6d7adf2e439c44250edb4c61e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraNoCerco
+  tempoParaSoltar: 0.35
+  tempoParaPrender: 0.5
 --- !u!1 &1279088617
 GameObject:
   m_ObjectHideFlags: 0
