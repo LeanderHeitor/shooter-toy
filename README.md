@@ -1,61 +1,79 @@
-# Shooter Toy - Desafio 2
+# Shooter Toy - Desafio 3
 
-Run-and-gun lateral de sobrevivencia sem fim, ambientado numa floresta noturna.
-Voce e o Tarma (Metal Slug), os rebeldes nao param de chegar e cada um deles morre
-com um tiro so - assim como voce.
+Run-and-gun lateral no estilo Metal Slug, numa floresta noturna. Voce e o Tarma, os
+rebeldes chegam em hordas, e cada um deles morre com um tiro so - assim como voce.
 
-Projeto Unity **6000.5.10f1**, 2D com URP e o Input System novo.
+No Desafio 2 isto era um brinquedo: inimigos para sempre, sem objetivo. No Desafio 3
+virou um jogo, construido em volta de uma experiencia:
+
+> Quero que o jogador sinta **ganancia** - que cada moeda gasta para salvar a pele agora
+> seja uma arma que ele nao vai ter na proxima horda.
+
+Projeto Unity **6000.5.10f1**, 2D com URP, Input System novo e Cinemachine.
+Abrir `Assets/Scenes/SampleScene.unity` e dar Play, ou jogar a versao WebGL (link na
+entrega da atividade).
 
 ## Como jogar
 
 | Tecla | Acao |
 |---|---|
-| `A` / seta esquerda | anda pra esquerda |
-| `D` / seta direita | anda pra direita |
-| `Espaco` | pula (so no chao) |
-| `J` ou botao esquerdo do mouse | **um tiro por toque**, ate 4 tiros/s; municao infinita |
+| `A` `D` / setas | anda |
+| `Espaco` | pula |
+| `J` ou botao esquerdo do mouse | atira (um tiro por toque; a metralhadora repete segurando) |
+| `K` | **granada**: mata todos os rebeldes dentro do cerco, custa moedas |
+| `E` (perto do prisioneiro) | abre a loja; `1`-`5` compram, `E` ou `Esc` fecham |
+| `P` ou `Esc` | pausa (no navegador o `Esc` e do browser, entao use o `P`) |
+| `T` (no menu) | modo de teste: comeca na horda 4, com shotgun, 2 coletes e 30 moedas |
 
-Abrir `Assets/Scenes/SampleScene.unity` e dar Play.
+## O loop do jogo
 
-Objetivo: sobreviver e superar seu numero de **abates**. Segurar o tiro nao cria
-novas balas; toques feitos durante o intervalo de 0,25s sao ignorados.
+1. **Horda.** Duas paredes fecham um **cerco** em volta do jogador. A horda so acaba
+   quando todos os rebeldes dela morrem (8, 12, 16 e 20 nas hordas 1 a 4).
+2. **Moedas no chao.** Cada rebelde tem 75% de chance de soltar moeda (1 da faca, 2 do
+   fuzil). A moeda **some em 7 segundos**: quem fica parado atirando fica pobre, e e
+   ela que puxa o jogador para o meio do tiroteio. Matar em sequencia paga bonus, e
+   limpar a horda paga +5.
+3. **Loja do prisioneiro.** Quando o cerco abre, um prisioneiro aparece no caminho.
+   Chegando perto ele se solta e vende:
 
-Quando voce morre, a animacao termina e aparece **VOCE MORREU**, com o jogo congelado.
-Uma nova tecla ou clique reinicia a partida. O **recorde** da sessao sobrevive ao
-reinicio. A **sequencia** aparece a partir de dois abates e expira apos 3s sem abater.
-Todos os textos usam **Comic Sans MS**, carregada das fontes instaladas no sistema.
+   | Item | Preco | Efeito |
+   |---|---|---|
+   | Colete | 12 | absorve um golpe (ate 3) |
+   | Shotgun | 22 | 3 chumbos em leque, alcance curto |
+   | Metralhadora | 30 | atira segurando o botao |
+   | Rocket | 45 | explode em area |
+   | Segunda chance | 60 | ao morrer, renasce e o cerco explode (uma por partida) |
 
-## Regras
+   Nenhuma arma mata mais que outra: todo inimigo morre com um acerto. O que muda e a
+   **forma** do tiro. Uma arma por vez; acabou a municao, volta a pistola.
+4. **Andar para frente** dispara a horda seguinte.
+5. **Horda 5, a ultima.** A regra troca: em vez de abates, o jogador precisa
+   **sobreviver** 15 segundos num cerco mais apertado, com rebeldes sem parar. Depois
+   entra o **chefe**, o rebelde da Minigun, com barra de vida. Derrubar ele vence o jogo.
 
-- Um toque do rebelde da faca, ou um tiro do rebelde do fuzil, mata voce.
-- Um tiro seu mata qualquer inimigo.
-- Ao renascer voce fica **1,5s invencivel, piscando**, pra nao morrer no susto.
-- Os inimigos nascem pra sempre e cada vez mais rapido:
+A tela de vitoria mostra quantas moedas sobraram: o recorde que importa e vencer rico.
 
-| | |
-|---|---|
-| Intervalo entre inimigos | 2,5s no inicio, chegando a 0,6s aos 2min30 |
-| Maximo vivos ao mesmo tempo | 6 |
-| So rebelde da faca | antes de 10s |
-| Primeiro rebelde do fuzil | primeiro spawn com vaga a partir de 10s |
-| Mistura depois do primeiro fuzileiro | chance de fuzil de 25%, crescendo ate 50% aos 2min30 |
-| Inimigo pelas costas | so depois de 60s |
+## Como o jogo cumpre o Desafio 3
 
-O fuzileiro para a 6 unidades e dispara sem espera adicional antes do primeiro tiro;
-os seguintes respeitam um intervalo de 2s. Sua bala e maior e mais lenta (velocidade 6)
-que a do jogador (16). Esses valores sao pontos de partida para o balanceamento.
-Inimigos mortos liberam a vaga de spawn imediatamente, antes de sumirem da tela.
+| Pontos | Exigencia | O que o jogo tem |
+|---|---|---|
+| 50 | Menu de entrada, pause e game over | Menu com controles e recorde, pausa, fim de jogo comparando com o recorde e vitoria. Uma cena so, com uma maquina de estados (`Estado` no `GameManager`) |
+| 50 | Camera especial **ou** IA de inimigo | **Cinemachine**: look-ahead na direcao do movimento, camera presa nas paredes do cerco (desliza ao prender e ao soltar) e tremor na granada |
+| 50 | Acao especial com vantagem e punicao | **Granada** (K): limpa o cerco, mas cobra na hora do uso (15, 20, 25...), nao solta moeda dos mortos e so pode ser usada **uma vez por horda** |
+| 100 | Sistema de recompensas | Moedas que expiram no chao, bonus de sequencia e de horda, loja com colete, armas e segunda chance |
+| 150 | Criatividade na experiencia | O loop inteiro gira em torno de gastar ou guardar, com o chefe como prova final do dinheiro guardado |
 
 ## Como o projeto esta organizado
 
 ```
 Assets/
-  Art/Background/     6 camadas do NightForest usadas no parallax
-  Art/Characters/     quadros de animacao, 1 PNG por quadro
-  Animations/         9 clipes .anim + 3 Animator Controllers
-  Prefabs/            KnifeRebel, RifleRebel, Bullet, EnemyBullet
+  Art/                fundo NightForest e quadros de animacao (1 PNG por quadro)
+  Animations/         clipes e Animator Controllers do Tarma e dos rebeldes
+  Fonts/              Comic Sans (ComicSansMS.ttf) dentro do projeto, para o WebGL
+  Prefabs/            rebeldes, balas
+  Resources/          prisioneiro e chefes, carregados por nome em codigo
   Scenes/             SampleScene - a unica cena do jogo
-  Scripts/            11 scripts (abaixo)
+  Scripts/            scripts (abaixo)
 Fontes/               folhas de sprite originais + creditos da arte
 ```
 
@@ -63,57 +81,42 @@ Fontes/               folhas de sprite originais + creditos da arte
 
 | Script | O que faz |
 |---|---|
-| `PlayerScript` | correr, pular, atirar por toque, morrer e piscar no respawn |
-| `BulletScript` | a bala anda, mata quem acerta e some no fim do alcance |
-| `EnemyDeath` | a morte de 1 tiro que os **dois** inimigos usam |
-| `EnemyKnife` | corre atras do player e mata no encostao |
-| `EnemyRifle` | anda, para na distancia de tiro e atira |
-| `Spawner` | cria inimigos pra sempre, cada vez mais rapido |
-| `GameManager` | abates, recorde, sequencia, fim de jogo e reinicio da cena |
-| `HUD` | desenha os numeros e a tela de fim de jogo |
-| `CameraFollow` | camera segue o player na horizontal |
-| `ParallaxLayer` | rola uma camada do fundo e a repete pra nunca acabar |
-| `GroundScroller` | mantem o colisor do chao sempre embaixo da camera |
+| `GameManager` | maquina de estados (menu, jogando, pausa, loja, fim, vitoria), placar, moedas e recordes |
+| `HUD` | desenha todas as telas e o placar em `OnGUI` |
+| `Horda` | comeca e termina as hordas, paga os bonus, chama o chefe e o prisioneiro |
+| `Cerco` | as duas paredes que prendem o jogador durante a horda |
+| `CameraNoCerco` | extensao do Cinemachine que prende a camera nas paredes |
+| `Spawner` | cria os rebeldes de cada horda, mais rapido a cada horda |
+| `PlayerScript` | correr, pular, atirar com cada arma, colete, morte |
+| `Arsenal` | arma atual, municao, coletes e segunda chance |
+| `Granada` | a acao especial: explosao, preco crescente, limite por horda, tremor |
+| `Moeda` | a moeda no chao, com prazo para ser pega |
+| `Loja` / `Prisioneiro` | a loja entre as hordas e quem atende |
+| `Chefe` / `Obus` | o chefe com barra de vida e o tiro em arco |
+| `EnemyKnife` / `EnemyRifle` / `EnemyDeath` | os rebeldes e a morte que os dois compartilham |
+| `BulletScript` / `Explosao` | as balas (inclusive o rocket) e o clarao da explosao |
+| `Sangue` / `Quadros` | efeitos de abate e animacao simples por lista de quadros |
+| `ParallaxLayer` / `GroundScroller` | fundo infinito em parallax e o chao que acompanha a camera |
+| `CameraFollow` | camera do Desafio 2, desligada desde a entrada do Cinemachine |
 
-### Duas decisoes que valem explicacao
+### Decisoes que valem explicacao
 
-**O mundo e infinito sem fabricar cenario.** Em vez de instanciar pedacos de chao,
-cada camada do fundo e um sprite em modo *Tiled* que o `ParallaxLayer` reposiciona por
-um numero inteiro de repeticoes a cada quadro - como a imagem se repete, o salto e
-invisivel e a camada nunca acaba. O chao e um unico colisor que acompanha a camera.
+**Uma cena so, uma maquina de estados.** O menu, a pausa, a loja e o fim de jogo nao
+sao outras cenas: sao estados do `GameManager`, e so o `Jogando` deixa o tempo andar.
+Todo o `Time.timeScale` passa por um metodo so (`IrPara`), o que evita a tela que
+congela o jogo e esquece de descongelar.
 
-**A morte do inimigo mora num componente separado.** `EnemyDeath` existe porque a bala
-precisa de um jeito unico de matar qualquer inimigo, sem herdar classe nem cruzar tipo.
-Os dois inimigos tambem compartilham o mesmo clipe de morte (`Rebel_Death`).
+**O mundo e infinito sem fabricar cenario.** Cada camada do fundo e um sprite em modo
+*Tiled* que o `ParallaxLayer` reposiciona por repeticoes inteiras, e o chao e um unico
+colisor que acompanha a camera. O cerco e o que da tamanho ao mundo durante a horda.
 
-## Numeros da cena
-
-- Pixels Per Unit **32** nos personagens e no fundo; camera ortografica **size 5.625**
-  (o fundo de 360px preenche a tela exatamente).
-- Linha do chao em **y = -3.75**. O pivo dos personagens e inferior-central,
-  entao o y do transform deles no chao e exatamente esse valor.
-- Os rebeldes usam uma celula unica de **52x51**, porque os dois compartilham a
-  animacao de morte. O Tarma usa **52x44** na maioria dos clipes, **48x42** na
-  corrida e **60x44** na morte; como o pivo e o centro da base, isso nao o desalinha.
-- O fundo tem 9 objetos montados com as 6 camadas. Os que rolam vao do fator
-  **0.15** (ceu) ao **1.0** (mato); as camadas **3 e 5** (raios de luz e nevoa)
-  tem fator 0 e ficam presas na camera.
-
-## Entrega do Desafio Unity 2
-
-O jogo preserva as tres acoes (correr, pular, atirar), animacoes do personagem e dos
-inimigos, morte e reinicio, morte e respawn dos inimigos e dificuldade gradual.
-O estudo prioriza codigo C# curto e legivel, com um script de bala compartilhado
-pelos dois prefabs e morte compartilhada pelos dois tipos de inimigo.
-
-Grave um video de **ate 10 minutos** explicando o jogo, o que aprendeu e uma
-dificuldade superada. Disponibilize o projeto com scripts e assets no GitHub e
-poste o link junto da entrega.
+**A fonte vem dentro do projeto.** No Desafio 2 a Comic Sans era carregada das fontes
+do Windows; no navegador ela nao existe e o texto sumia. Agora a fonte e um asset.
 
 ## Creditos da arte
 
-Sprites de personagem de **Metal Slug 3**, propriedade da **SNK/Playmore**,
-ripados por **Gussprint** - o proprio pacote exige credito:
+Sprites de personagem de **Metal Slug 3**, propriedade da **SNK/Playmore**, ripados por
+**Gussprint** (o pacote exige credito) e **Goemar** (folha da Minigun):
 
 > COPYRIGHTED BY: SNK/Playmore - TILE-RIPPED BY: Gussprint - REQUIREMENTS FOR USE: Give credit.
 

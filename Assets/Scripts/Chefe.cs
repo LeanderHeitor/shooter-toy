@@ -1,9 +1,9 @@
 using UnityEngine;
 
 // Chefe.cs
-// O inimigo que fecha as hordas 5 e 10. Depois dos segundos de resistencia, a
-// torneira de rebeldes fecha e entra ele, sozinho, dentro do cerco. A horda so acaba
-// quando ele cai.
+// O inimigo que fecha a horda 5, a ultima da partida. Depois dos segundos de
+// resistencia, a torneira de rebeldes fecha e entra ele, sozinho, dentro do cerco.
+// A horda so acaba quando ele cai, e derrubar ele vence o jogo.
 //
 // E o unico inimigo do jogo com barra de vida. O resto morre com um tiro, e isso
 // continua sendo a regra: o chefe e a excecao que faz a regra ser notada. E ele que
@@ -11,7 +11,8 @@ using UnityEngine;
 // barra, a pistola arranha - entao a ganancia tem uma prova no fim de cada ciclo.
 //
 // Um script so para os dois chefes: o que muda entre eles sao os numeros e a arte,
-// e a pergunta que cada um faz ao jogador.
+// e a pergunta que cada um faz ao jogador. So a Minigun aparece na partida; o
+// Di-Cokka ficou pronto, mas saiu quando o jogo foi encurtado de 10 para 5 hordas.
 //   Minigun: rajada reta na altura do peito. A resposta e PULAR.
 //   Di-Cokka: obus em arco que cai onde o jogador estava. A resposta e CORRER.
 public class Chefe : MonoBehaviour
