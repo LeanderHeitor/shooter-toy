@@ -13,18 +13,30 @@ using Unity.Cinemachine;
 // Vai no mesmo objeto do GameManager.
 public class Granada : MonoBehaviour
 {
-    public int custo = 10;
+    // Mais que um colete (12): limpar a tela nao pode sair mais barato que aguentar
+    // um tiro. Duas granadas numa partida (15 + 20) ja custam mais que qualquer arma
+    // da loja, e e essa a troca que a ganancia pede.
+    public int custo = 15;
 
-    // Cada granada da partida custa mais que a anterior (10, 15, 20...). Sem isso o
+    // Cada granada da partida custa mais que a anterior (15, 20, 25...). Sem isso o
     // jogador rico resolve toda horda no K, e a granada deixa de ser uma decisao para
     // virar um botao de limpar a tela. Encarecer faz a primeira ser facil de usar e a
     // terceira ser uma pergunta de verdade: "vale mesmo o rocket que eu nao compro?"
     public int aumentoPorUso = 5;
     public static int usosNaPartida = 0;
 
+    // Uma granada por horda. Mesmo cara, ela ainda resolvia a horda duas vezes
+    // seguidas para quem tinha dinheiro. Com o limite, jogar a granada tambem e
+    // decidir QUANDO: gastar no primeiro aperto e ficar sem ela no pior momento da
+    // mesma horda, ou aguentar e guardar para quando o cerco realmente fechar.
+    // Guarda o numero da horda em que foi usada, e nao um bool, para nao precisar
+    // de ninguem lembrando de zerar quando a horda seguinte comeca.
+    public static int hordaDaUltima = -1;
+    public static bool JaUsadaNestaHorda { get { return Horda.emCombate && hordaDaUltima == Horda.numero; } }
+
     // O preco da proxima, para o HUD mostrar sempre: preco que muda precisa estar a
     // vista, senao o jogador descobre na hora errada que nao tem como pagar.
-    public static int custoAgora = 10;
+    public static int custoAgora = 15;
 
     // Quanto a camera treme. O tremor nao e enfeite: e o que faz o jogador sentir
     // que gastou alguma coisa grande, e nao que apertou um botao de limpar a tela.
@@ -37,8 +49,9 @@ public class Granada : MonoBehaviour
 
     // Quando o jogador tenta sem ter como pagar, o HUD mostra quanto falta por um
     // instante. Sem esse aviso o K parece quebrado.
+    // O mesmo aviso serve para a horda em que ela ja foi usada.
     public static float avisoDeSaldoAte = -1f;
-    public static int faltouNoAviso = 0;
+    public static string textoDoAviso = "";
 
     private CinemachineImpulseSource tremor;
 
@@ -54,6 +67,7 @@ public class Granada : MonoBehaviour
         claraoAte = -1f;
         avisoDeSaldoAte = -1f;
         usosNaPartida = 0;
+        hordaDaUltima = -1;
         custoAgora = custo;
     }
 
@@ -112,14 +126,23 @@ public class Granada : MonoBehaviour
         // errada, e nao pela escolha de ganancia que a granada existe para criar.
         if (alvos.Length == 0) return;
 
+        if (JaUsadaNestaHorda)
+        {
+            textoDoAviso = "Granada: só uma por horda";
+            avisoDeSaldoAte = Time.time + 1.5f;
+            return;
+        }
+
         if (GameManager.Gastar(custoAgora) == false)
         {
-            faltouNoAviso = custoAgora - GameManager.moedas;
+            int falta = custoAgora - GameManager.moedas;
+            textoDoAviso = "Granada: faltam " + falta + (falta == 1 ? " moeda" : " moedas");
             avisoDeSaldoAte = Time.time + 1.5f;
             return;
         }
 
         usosNaPartida = usosNaPartida + 1;
+        hordaDaUltima = Horda.numero;
         custoAgora = custo + (aumentoPorUso * usosNaPartida);
 
         Explodir(alvos, forcaDoTremor);

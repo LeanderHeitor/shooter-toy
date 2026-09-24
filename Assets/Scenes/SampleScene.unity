@@ -3060,7 +3060,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67d4ad780c6909947866a214894ffe47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Granada
-  custo: 10
+  custo: 15
+  aumentoPorUso: 5
   forcaDoTremor: 0.6
   duracaoDoTremor: 0.4
 --- !u!4 &7859015700134664515

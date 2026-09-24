@@ -453,8 +453,11 @@ public class HUD : MonoBehaviour
         // saldo a todo instante para decidir se gasta a granada agora ou guarda para
         // a loja. Um numero que some quando chega a zero esconde justamente o momento
         // em que a decisao fica mais dura.
+        // Depois de usada, a granada mostra que acabou nesta horda em vez do preco:
+        // o jogador precisa saber que o K nao esta mais disponivel antes de aperta-lo.
+        string granada = Granada.JaUsadaNestaHorda ? "granada usada" : "granada " + Granada.custoAgora;
         Escrever(new Rect(margem, margem + (linha * 2f), largura, linha),
-                 "Moedas: " + GameManager.moedas + "   ·   granada " + Granada.custoAgora,
+                 "Moedas: " + GameManager.moedas + "   ·   " + granada,
                  placar, corDaMoeda);
 
         // A sequencia so aparece quando esta valendo alguma coisa. Ela sumir da tela
@@ -475,10 +478,8 @@ public class HUD : MonoBehaviour
         // Aparece embaixo do saldo, que e para onde o olho vai quando o K nao funciona.
         if (Time.time < Granada.avisoDeSaldoAte)
         {
-            int falta = Granada.faltouNoAviso;
             Escrever(new Rect(margem, margem + (linha * 4f), largura, linha),
-                     "Granada: faltam " + falta + (falta == 1 ? " moeda" : " moedas"),
-                     placar, new Color(1f, 0.4f, 0.35f));
+                     Granada.textoDoAviso, placar, new Color(1f, 0.4f, 0.35f));
         }
     }
 
