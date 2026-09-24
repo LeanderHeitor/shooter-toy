@@ -941,7 +941,14 @@ MonoBehaviour:
   meiaLarguraDoCerco: 12
   meiaLarguraNaResistencia: 9
   avancoParaComecar: 7
+  alemDaParedeAntiga: 4
+  alemDoPrisioneiro: 6
   segundosAteComecarSozinha: 12
+  hordaDoTeste: 4
+  armaDoTeste: 1
+  tirosDoTeste: 20
+  coletesDoTeste: 2
+  moedasDoTeste: 30
 --- !u!4 &405546855
 Transform:
   m_ObjectHideFlags: 0
@@ -2728,6 +2735,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7c3989401a1cf3fa62319abc8d5ab12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  segundosAntesDeSair: 1.2
   janelaDaSequencia: 3
   abatesPorBonus: 5
 --- !u!1 &3632783866383407172

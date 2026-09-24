@@ -66,10 +66,30 @@ public class Horda : MonoBehaviour
     // nessa pausa que o prisioneiro aparece com a loja.
     public float avancoParaComecar = 7f;
 
+    // Antes a linha de largada era "7 a frente de onde o jogador estava quando a
+    // horda acabou". Se ele terminava encostado na parede da esquerda, a linha caia
+    // no meio do cerco antigo - justamente onde estavam as moedas - e ir buscar uma
+    // delas passando pelo prisioneiro ja disparava a horda seguinte, sem loja.
+    // Agora a linha fica sempre alem da parede antiga e alem do prisioneiro: tudo o
+    // que sobrou da horda pode ser recolhido, e a loja nunca fica para tras sem querer.
+    public float alemDaParedeAntiga = 4f;
+    public float alemDoPrisioneiro = 6f;
+
     // Rede de seguranca: se o jogador ficar parado (ou so recuando), a horda comeca
     // sozinha. Sem isto daria para ficar eternamente no intervalo, que e exatamente
-    // o tipo de fuga que o cerco foi feito para acabar.
+    // o tipo de fuga que o cerco foi feito para acabar. O relogio recomeca sempre
+    // que ele avanca: quem esta andando para a frente nao precisa ser empurrado.
     public float segundosAteComecarSozinha = 12f;
+
+    // ----- TESTE -----
+    // Apertar T na tela inicial pula direto para uma horda adiantada, ja equipado,
+    // para testar sem jogar tudo de novo. Qualquer outra tecla comeca a partida de
+    // verdade, pobre e na horda 1.
+    public int hordaDoTeste = 4;
+    public TipoDeArma armaDoTeste = TipoDeArma.Shotgun;
+    public int tirosDoTeste = 20;
+    public int coletesDoTeste = 2;
+    public int moedasDoTeste = 30;
 
     // ----- ESTADO ATUAL, PARA O HUD LER -----
     public static int numero = 0;            // 0 = a partida ainda nao teve horda
@@ -95,6 +115,7 @@ public class Horda : MonoBehaviour
 
     private float xQuePrecisaAlcancar = 0f;
     private float comecaSozinhaEm = 0f;
+    private float maisLongeNoIntervalo = 0f;   // o x mais a frente que ele ja pisou
 
     // O chefe da resistencia atual. O bool diz se ele ja foi chamado: o Chefe em
     // si vira nulo quando a carcaca some, e isso nao pode parecer "ainda nao veio".
@@ -138,6 +159,34 @@ public class Horda : MonoBehaviour
         }
 
         AbrirIntervalo();
+    }
+
+    // Chamado pelo GameManager quando o T e apertado no menu. O Awake ja zerou
+    // tudo; aqui so se sobrescreve. A partida comeca como se a horda anterior
+    // tivesse acabado agora, com a loja aberta.
+    public void ComecarNoTeste()
+    {
+        // O AbrirIntervalo do Start ja rodou com numero 0, que e o certo: com
+        // numero > 0 a linha de largada procuraria a parede de um cerco antigo que
+        // nesta partida nunca existiu.
+        numero = Mathf.Max(0, hordaDoTeste - 1);
+
+        // Conta quantas das hordas ja "jogadas" foram de quota, senao a quota da
+        // horda do teste sairia do tamanho da primeira.
+        hordasDeQuota = 0;
+        for (int n = 1; n <= numero; n++)
+            if (EhResistencia(n) == false) hordasDeQuota = hordasDeQuota + 1;
+
+        Arsenal.Equipar(armaDoTeste, tirosDoTeste);
+        Arsenal.coletes = Mathf.Min(coletesDoTeste, Arsenal.maximoDeColetes);
+        GameManager.moedas = moedasDoTeste;
+
+        if (numero > 0 && loja != null && jogador != null)
+        {
+            float x = jogador.position.x + (avancoParaComecar * 0.5f);
+            loja.ChamarPrisioneiro(new Vector3(x, cerco.alturaDoChao, 0f));
+            xQuePrecisaAlcancar = Mathf.Max(xQuePrecisaAlcancar, x + alemDoPrisioneiro);
+        }
     }
 
     void Update()
@@ -218,6 +267,12 @@ public class Horda : MonoBehaviour
 
     void EsperarOJogadorAvancar()
     {
+        if (jogador.position.x > maisLongeNoIntervalo + 0.5f)
+        {
+            maisLongeNoIntervalo = jogador.position.x;
+            comecaSozinhaEm = Time.time + segundosAteComecarSozinha;
+        }
+
         bool avancou = jogador.position.x >= xQuePrecisaAlcancar;
         bool demorou = Time.time >= comecaSozinhaEm;
 
@@ -303,6 +358,8 @@ public class Horda : MonoBehaviour
         {
             float x = jogador.position.x + (avancoParaComecar * 0.5f);
             loja.ChamarPrisioneiro(new Vector3(x, cerco.alturaDoChao, 0f));
+
+            xQuePrecisaAlcancar = Mathf.Max(xQuePrecisaAlcancar, x + alemDoPrisioneiro);
         }
     }
 
@@ -326,10 +383,15 @@ public class Horda : MonoBehaviour
 
     void AbrirIntervalo()
     {
-        xQuePrecisaAlcancar = jogador != null
-            ? jogador.position.x + avancoParaComecar
-            : avancoParaComecar;
+        float x = jogador != null ? jogador.position.x : 0f;
+        xQuePrecisaAlcancar = x + avancoParaComecar;
 
+        // Depois da primeira horda existe um cerco antigo, e a linha fica alem dele.
+        // O Abrir so desliga as paredes: os limites continuam guardados no Cerco.
+        if (numero > 0)
+            xQuePrecisaAlcancar = Mathf.Max(xQuePrecisaAlcancar, Cerco.limiteDireito + alemDaParedeAntiga);
+
+        maisLongeNoIntervalo = x;
         comecaSozinhaEm = Time.time + segundosAteComecarSozinha;
     }
 

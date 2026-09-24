@@ -123,7 +123,15 @@ public class GameManager : MonoBehaviour
         switch (estado)
         {
             case Estado.Menu:
-                if (ApertouAlgumaTecla()) IrPara(Estado.Jogando);
+                // O T comeca no modo de teste, ja adiantado e equipado. Vem antes
+                // do "qualquer tecla", senao o T tambem contaria como comecar normal.
+                if (ApertouTeste())
+                {
+                    Horda horda = FindFirstObjectByType<Horda>();
+                    if (horda != null) horda.ComecarNoTeste();
+                    IrPara(Estado.Jogando);
+                }
+                else if (ApertouAlgumaTecla()) IrPara(Estado.Jogando);
                 break;
 
             case Estado.Jogando:
@@ -178,6 +186,12 @@ public class GameManager : MonoBehaviour
         if (m != null && m.leftButton.wasPressedThisFrame) return true;
 
         return false;
+    }
+
+    static bool ApertouTeste()
+    {
+        Keyboard kb = Keyboard.current;
+        return kb != null && kb.tKey.wasPressedThisFrame;
     }
 
     // Esc E P pausam. O Esc e o que todo mundo tenta primeiro, mas no NAVEGADOR ele

@@ -498,6 +498,10 @@ public class HUD : MonoBehaviour
         Escrever(Faixa(meio + (linha * 0.3f), dica.fontSize * 2f),
                  "aperte qualquer tecla para começar", dica, Color.white);
 
+        Escrever(Faixa(meio + (linha * 0.9f), dica.fontSize * 2f),
+                 "T: modo de teste (horda 4, shotgun, 2 coletes, 30 moedas)", dica,
+                 new Color(0.6f, 0.65f, 0.75f));
+
         // O recorde so aparece depois da primeira partida - antes dele existir,
         // "Recorde: 0" nao informa nada e ocupa espaco.
         if (GameManager.recorde > 0)
